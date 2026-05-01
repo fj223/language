@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-tertiary-fixed-dim: #cecfef;
+  --color-surface-bright: #f8f9fa;
+  --color-on-tertiary-fixed: #3a3c55;
+  --color-on-secondary-container: #4f5257;
+  --color-secondary-container: #e1e2e9;
+  --color-primary-fixed-dim: #c1d5ff;
+  --color-on-tertiary-fixed-variant: #565873;
+  --color-surface-container: #eaeff1;
+  --color-primary: #335ea1;
+  --color-error: #9f403d;
+  --color-on-surface: #2b3437;
+  --color-on-secondary-fixed-variant: #595b61;
+  --color-surface-tint: #335ea1;
+  --color-secondary-fixed: #e1e2e9;
+  --color-on-surface-variant: #586064;
+  --color-error-container: #fe8983;
+  --color-outline-variant: #abb3b7;
+  --color-surface-container-high: #e3e9ec;
+  --color-error-dim: #4e0309;
+  --color-surface-variant: #dbe4e7;
+  --color-surface-container-lowest: #ffffff;
+  --color-primary-dim: #245294;
+  --color-tertiary: #5b5d78;
+  --color-surface: #f8f9fa;
+  --color-primary-fixed: #d7e3ff;
+  --color-on-error: #fff7f6;
+  --color-surface-dim: #d1dce0;
+  --color-on-error-container: #752121;
+  --color-on-secondary-fixed: #3d3f44;
+  --color-outline: #737c7f;
+  --color-inverse-surface: #0c0f10;
+  --color-tertiary-container: #ddddfe;
+  --color-on-background: #2b3437;
+  --color-on-tertiary: #fbf8ff;
+  --color-secondary-fixed-dim: #d3d4da;
+  --color-on-primary-container: #235194;
+  --color-surface-container-low: #f1f4f6;
+  --color-inverse-on-surface: #9b9d9e;
+  --color-primary-container: #d7e3ff;
+  --color-on-primary-fixed: #043e80;
+  --color-surface-container-highest: #dbe4e7;
+  --color-inverse-primary: #86aef7;
+  --color-on-primary-fixed-variant: #305b9e;
+  --color-background: #f8f9fa;
+  --color-on-secondary: #f8f8ff;
+  --color-tertiary-fixed: #ddddfe;
+  --color-secondary-dim: #515358;
+  --color-on-primary: #f7f7ff;
+  --color-on-tertiary-container: #4c4e69;
+  --color-tertiary-dim: #4f516c;
+  --color-secondary: #5d5f64;
+
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Public Sans", sans-serif;
+  --font-label: "Public Sans", sans-serif;
+}
+
+@layer base {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  body { 
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+  }
+  h1, h2, h3, .font-headline { font-family: var(--font-headline); }
+}

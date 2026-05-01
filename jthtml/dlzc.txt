@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>登录与注册 - OpenEdu 公益教育平台</title>
+<!-- Google Fonts: Manrope & Public Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Public+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary": "#5d5f64",
+              "primary-dim": "#245294",
+              "surface-container-high": "#e3e9ec",
+              "tertiary-container": "#ddddfe",
+              "inverse-surface": "#0c0f10",
+              "on-background": "#2b3437",
+              "secondary-dim": "#515358",
+              "on-secondary-fixed-variant": "#595b61",
+              "surface-bright": "#f8f9fa",
+              "inverse-on-surface": "#9b9d9e",
+              "tertiary-fixed": "#ddddfe",
+              "on-primary-fixed": "#043e80",
+              "on-tertiary-fixed": "#3a3c55",
+              "on-primary-fixed-variant": "#305b9e",
+              "primary": "#335ea1",
+              "on-surface": "#2b3437",
+              "on-primary": "#f7f7ff",
+              "on-tertiary-container": "#4c4e69",
+              "error-dim": "#4e0309",
+              "tertiary": "#5b5d78",
+              "error-container": "#fe8983",
+              "primary-fixed": "#d7e3ff",
+              "surface-tint": "#335ea1",
+              "on-tertiary": "#fbf8ff",
+              "secondary-container": "#e1e2e9",
+              "background": "#f8f9fa",
+              "surface": "#f8f9fa",
+              "on-error": "#fff7f6",
+              "primary-container": "#d7e3ff",
+              "inverse-primary": "#86aef7",
+              "tertiary-fixed-dim": "#cecfef",
+              "secondary-fixed-dim": "#d3d4da",
+              "on-error-container": "#752121",
+              "on-secondary": "#f8f8ff",
+              "outline": "#737c7f",
+              "on-secondary-container": "#4f5257",
+              "surface-container-low": "#f1f4f6",
+              "surface-container-highest": "#dbe4e7",
+              "surface-variant": "#dbe4e7",
+              "surface-container": "#eaeff1",
+              "outline-variant": "#abb3b7",
+              "surface-dim": "#d1dce0",
+              "surface-container-lowest": "#ffffff",
+              "error": "#9f403d",
+              "tertiary-dim": "#4f516c",
+              "on-tertiary-fixed-variant": "#565873",
+              "on-secondary-fixed": "#3d3f44",
+              "on-primary-container": "#235194",
+              "on-surface-variant": "#586064",
+              "primary-fixed-dim": "#c1d5ff",
+              "secondary-fixed": "#e1e2e9"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Public Sans"],
+              "label": ["Public Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f8f9fa;
+        }
+        h1, h2, h3, .font-manrope {
+            font-family: 'Manrope', sans-serif;
+        }
+        .form-input-focus:focus {
+            border-bottom-width: 2px;
+            border-color: #335ea1;
+            outline: none;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1dce0; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
+<!-- Main Content Wrapper -->
+<main class="flex-grow flex flex-col md:flex-row min-h-screen">
+<!-- Left Column: Branding & Promotion -->
+<section class="hidden md:flex md:w-5/12 lg:w-1/2 relative bg-primary items-center justify-center p-12 overflow-hidden">
+<!-- Decorative Background Elements -->
+<div class="absolute inset-0 opacity-10">
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full bg-white blur-3xl"></div>
+<div class="absolute bottom-[-5%] right-[-5%] w-80 h-80 rounded-full bg-primary-container blur-3xl"></div>
+</div>
+<div class="relative z-10 max-w-lg text-center md:text-left">
+<div class="mb-8 inline-flex items-center space-x-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+<span class="material-symbols-outlined text-white" data-icon="school">school</span>
+<span class="text-white font-headline font-bold tracking-tight text-xl">OpenEdu</span>
+</div>
+<h1 class="text-white text-5xl lg:text-6xl font-headline font-extrabold leading-tight mb-6">
+                    OpenEdu：<br/><span class="text-primary-container">无边界学习</span>
+</h1>
+<p class="text-on-primary/80 text-lg font-body leading-relaxed mb-12 max-w-md">
+                    加入我们，开启全网免费精品资源学习之旅。我们致力于打破知识围墙，让教育公平惠及每一个人。
+                </p>
+<!-- Visual Element: Abstract Card or Illustration -->
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary-fixed to-tertiary-fixed rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+<div class="relative bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-xl shadow-2xl">
+<div class="flex items-center space-x-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h3 class="text-white font-headline font-semibold">智慧推荐系统</h3>
+<p class="text-on-primary/60 text-sm">为你量身定制学习路径</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+<div class="h-full w-2/3 bg-primary-container"></div>
+</div>
+<div class="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+<div class="h-full w-1/2 bg-tertiary-fixed"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Forms Section -->
+<section class="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 bg-surface">
+<!-- Mobile Logo -->
+<div class="md:hidden mb-8 flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="school">school</span>
+<span class="text-primary font-headline font-bold text-2xl tracking-tight">OpenEdu</span>
+</div>
+<div class="w-full max-w-md">
+<!-- Tabs Container -->
+<div class="bg-surface-container-low p-1 rounded-xl mb-10 flex space-x-1">
+<button class="flex-1 py-3 text-sm font-headline font-bold rounded-lg transition-all duration-300 bg-surface-container-lowest text-primary shadow-sm" id="tab-login-btn">
+                        登录
+                    </button>
+<button class="flex-1 py-3 text-sm font-headline font-medium rounded-lg transition-all duration-300 text-on-surface-variant hover:text-on-surface" id="tab-register-btn">
+                        免费注册
+                    </button>
+</div>
+<!-- Form Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 lg:p-10 shadow-[0px_12px_32px_rgba(43,52,55,0.06)] relative">
+<!-- Login Form -->
+<div class="block" id="login-form">
+<header class="mb-8">
+<h2 class="text-2xl font-headline font-bold text-on-surface">欢迎回来</h2>
+<p class="text-on-surface-variant text-sm mt-2">请登录您的账户以继续学习</p>
+</header>
+<form class="space-y-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">邮箱地址</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="mail">mail</span>
+<input class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="name@example.com" type="email"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">密码</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<label class="flex items-center space-x-2 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 transition-all" type="checkbox"/>
+<span class="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">记住我</span>
+</label>
+<a class="text-sm font-medium text-primary hover:text-primary-dim transition-colors" href="#">忘记密码？</a>
+</div>
+<button class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center space-x-2" type="submit">
+<span>立即登录</span>
+<span class="material-symbols-outlined text-lg" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+</div>
+<!-- Register Form (Hidden by default) -->
+<div class="hidden" id="register-form">
+<header class="mb-8">
+<h2 class="text-2xl font-headline font-bold text-on-surface">创建新账户</h2>
+<p class="text-on-surface-variant text-sm mt-2">开启您的终身学习之旅</p>
+</header>
+<form class="space-y-5">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">用户名</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="person">person</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="学习先行者" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">邮箱地址</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="mail">mail</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="edu@example.com" type="email"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">设置密码</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="至少8位字符" type="password"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">确认密码</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors" data-icon="verified_user">verified_user</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 form-input-focus transition-all" placeholder="再次输入密码" type="password"/>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-2" type="submit">
+                                立即注册
+                            </button>
+<p class="text-center text-[10px] sm:text-xs text-on-surface-variant leading-relaxed px-4">
+                                注册即代表同意《OpenEdu 公益服务协议》和《用户隐私政策》。我们将保护您的数据安全。
+                            </p>
+</form>
+</div>
+</div>
+<!-- Alternative Entry Points -->
+<div class="mt-10 flex items-center justify-center space-x-6 text-on-surface-variant">
+<span class="h-px w-12 bg-outline-variant/30"></span>
+<span class="text-xs uppercase tracking-widest font-bold">第三方登录</span>
+<span class="h-px w-12 bg-outline-variant/30"></span>
+</div>
+<div class="mt-6 flex justify-center space-x-4">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
+<img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2dpzVZ362Rd8nCYnGL4z4XuzXWEEnw-R74ATeQ2qz5j18Oe_Rul06x9ZqD0-nSEzOqcj0zHCb8Uqubv9QydDqj3xrZOnWCL1n-D9vMlLN7-fn3-hO5D1YTM0lAjYHXuE5SdW8ZugdYvCloU5mClerHRCsI0zcibPGYg0xaPdMnNJM0FlwRTgaa6f_1SxaGtmUJvDImrB6vBMDljY9lwOv8I39D8naBY2kVvttuLIKghKdE5PjGRJI53jMF6PTIbHFpjG34ONDtYk"/>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
+<img alt="GitHub" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEyRL-67Sl89uBBDjNK_NW7r3fDwNAlYJz3qnv1PHvnGAe_xoRO3CYjsVUnLMfxUjHLSHkklKN_d36zaeXhNn_zBnxtGIkmvgSiUoueJtXxMCu-zwwMJE7Ux1COc-wDghlTi_De3vUSOYgTDJPBdEQ7OHz_0AIF0qxxFTrWsKVgNfVqCZrNG18-3KTLlFqLB006Dn1E3jZhsAWFHOq2LgJT09X6ObYLNZ8QLawITJGVk0IM4N3vrwbIMwDpjKFB_Jw2hmH18LDLY4"/>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
+<img alt="WeChat" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARnECBghds9zRqgvYdFVHb5scMl2eBCw0iV4nOAfKBhgNTYf0vpg4RC4e5SOrS5Un8jE2_th6biEkS-j6utNaquehHDpQLUD3fYhUjWOLxi8l-kShvN8J1kuCXo-rClqokSGm_Iv4g6wy1k4JYu-B3XipI452RxImq8yX2WDpIu1NMZ_-estXkEYEm7WvtIeEstDgNbmnZPmpgh-9W434Ra8q7ZLgu3o7z7pHoo6OWa_ZjDiCZoKiFXFq8blsJAxsxeLiqlNfVygU"/>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 mt-auto bg-[#f8f9fa] dark:bg-slate-950 flex flex-col md:flex-row justify-between items-center px-12 border-t border-slate-100 dark:border-slate-800">
+<div class="mb-4 md:mb-0">
+<span class="font-manrope font-semibold text-slate-900 dark:text-white text-sm">OpenEdu</span>
+<span class="font-publicSans text-xs text-slate-500 ml-4">© 2024 OpenEdu Intellectual Canvas. All rights reserved.</span>
+</div>
+<div class="flex space-x-8">
+<a class="font-publicSans text-xs text-slate-400 hover:text-[#335ea1] transition-all" href="#">隐私政策</a>
+<a class="font-publicSans text-xs text-slate-400 hover:text-[#335ea1] transition-all" href="#">服务条款</a>
+<a class="font-publicSans text-xs text-slate-400 hover:text-[#335ea1] transition-all" href="#">联系我们</a>
+</div>
+</footer>
+<!-- Interactive Logic (Purely Visual Switch) -->
+<script>
+        const loginTab = document.getElementById('tab-login-btn');
+        const registerTab = document.getElementById('tab-register-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-bold');
+            loginTab.classList.remove('text-on-surface-variant', 'font-medium');
+            
+            registerTab.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-bold');
+            registerTab.classList.add('text-on-surface-variant', 'font-medium');
+            
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-bold');
+            registerTab.classList.remove('text-on-surface-variant', 'font-medium');
+            
+            loginTab.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-bold');
+            loginTab.classList.add('text-on-surface-variant', 'font-medium');
+            
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+    </script>
+</body></html>

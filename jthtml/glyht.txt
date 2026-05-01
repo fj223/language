@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Course &amp; Video Resource Management | The Atelier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Public+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#f8f9fa",
+              "on-secondary": "#f8f8ff",
+              "inverse-surface": "#0c0f10",
+              "surface-container-low": "#f1f4f6",
+              "on-error": "#fff7f6",
+              "inverse-on-surface": "#9b9d9e",
+              "secondary-fixed-dim": "#d3d4da",
+              "on-secondary-fixed-variant": "#595b61",
+              "surface-dim": "#d1dce0",
+              "on-tertiary": "#fbf8ff",
+              "on-tertiary-fixed-variant": "#565873",
+              "primary-fixed": "#d7e3ff",
+              "on-primary-container": "#235194",
+              "on-primary-fixed-variant": "#305b9e",
+              "surface-container": "#eaeff1",
+              "surface-bright": "#f8f9fa",
+              "error-container": "#fe8983",
+              "surface-variant": "#dbe4e7",
+              "inverse-primary": "#86aef7",
+              "surface-tint": "#335ea1",
+              "secondary-container": "#e1e2e9",
+              "on-secondary-fixed": "#3d3f44",
+              "tertiary-dim": "#4f516c",
+              "surface-container-highest": "#dbe4e7",
+              "on-surface": "#2b3437",
+              "surface": "#f8f9fa",
+              "secondary": "#5d5f64",
+              "error": "#9f403d",
+              "outline-variant": "#abb3b7",
+              "surface-container-lowest": "#ffffff",
+              "primary-container": "#d7e3ff",
+              "tertiary": "#5b5d78",
+              "primary-dim": "#245294",
+              "on-primary-fixed": "#043e80",
+              "tertiary-fixed": "#ddddfe",
+              "primary": "#335ea1",
+              "error-dim": "#4e0309",
+              "surface-container-high": "#e3e9ec",
+              "on-tertiary-container": "#4c4e69",
+              "on-secondary-container": "#4f5257",
+              "tertiary-fixed-dim": "#cecfef",
+              "secondary-fixed": "#e1e2e9",
+              "outline": "#737c7f",
+              "on-surface-variant": "#586064",
+              "on-error-container": "#752121"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Public Sans"],
+              "label": ["Public Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Public Sans', sans-serif;
+        background-color: #f8f9fa;
+        color: #2b3437;
+      }
+      h1, h2, h3 {
+        font-family: 'Manrope', sans-serif;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #dbe4e7;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-[#f1f4f6] dark:bg-slate-900 border-none flex flex-col py-8 space-y-2 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-xl font-extrabold text-[#335ea1] dark:text-blue-400 tracking-tighter">The Atelier</h1>
+<p class="text-xs font-['Manrope'] font-medium text-on-surface-variant uppercase tracking-widest mt-1">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] dark:hover:text-blue-200 transition-colors ml-2 mr-4 py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm tracking-tight hover:bg-[#dbe4e7]/50 transition-all duration-200 scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="bg-[#dbe4e7] dark:bg-slate-800 text-[#335ea1] dark:text-blue-300 font-bold rounded-lg ml-2 mr-4 py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm tracking-tight scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="import_contacts">import_contacts</span>
+<span>Course Catalog</span>
+</a>
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] dark:hover:text-blue-200 transition-colors ml-2 mr-4 py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm tracking-tight hover:bg-[#dbe4e7]/50 transition-all duration-200 scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Student Registry</span>
+</a>
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] dark:hover:text-blue-200 transition-colors ml-2 mr-4 py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm tracking-tight hover:bg-[#dbe4e7]/50 transition-all duration-200 scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="insert_chart">insert_chart</span>
+<span>Analytics</span>
+</a>
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] dark:hover:text-blue-200 transition-colors ml-2 mr-4 py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm tracking-tight hover:bg-[#dbe4e7]/50 transition-all duration-200 scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>System Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 border-t border-surface-variant/30 px-2 space-y-1">
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] transition-colors py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<a class="text-[#586064] dark:text-slate-400 hover:text-[#335ea1] transition-colors py-3 px-4 flex items-center gap-3 font-['Manrope'] font-medium text-sm scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="sticky top-0 w-full z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl flex justify-between items-center h-16 px-8 ml-64 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-none font-['Public_Sans'] font-normal">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline" placeholder="Global resource search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-[#f1f4f6] dark:hover:bg-slate-800 p-2 rounded-full transition-all cursor-pointer active:opacity-70" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-[#f1f4f6] dark:hover:bg-slate-800 p-2 rounded-full transition-all cursor-pointer active:opacity-70" data-icon="help_outline">help_outline</button>
+</div>
+<div class="h-8 w-px bg-surface-variant"></div>
+<div class="flex items-center gap-3 cursor-pointer active:opacity-70 transition-opacity">
+<img alt="User profile" class="h-8 w-8 rounded-full bg-primary-container p-1" data-alt="close-up portrait of professional female administrator in modern office setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_2wVAV8AdEkmEWbhX3ca-0W7Lw-Yt0045u5XURvKRiiHvNqaSu8GoSR00XwnXes11RpMzEzUdPpc7-DQ2kOqYEe7JjYCM2msCRoAh4KCQk5XBl28MySwjKVokYQ5iAoemZTNlDLavrjcdY4BY0Ia1ow3BccTbuY0krvMax-FO8pixPd7hC6ySiz4u8_8B369rPQHOL7HLYjhW7e964c8d6vqGQXv6PmUb6wufClnqCHjcCJr0-HBH_gBGjJdgvReETdD0wPdeZJ8"/>
+<span class="text-sm font-medium text-on-surface">Alex Rivera</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-8 min-h-[calc(100vh-64px)] relative">
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-10">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Course and Video Resource Management</h2>
+<p class="text-on-surface-variant mt-1">Curate and organize the digital intellectual archive.</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-headline font-semibold flex items-center gap-2 hover:bg-primary-dim transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Add New Course/Video
+            </button>
+</div>
+<!-- Search & Filter Bar -->
+<div class="bg-surface-container-lowest p-5 rounded-xl mb-8 flex flex-wrap gap-4 items-center shadow-sm">
+<div class="flex-1 min-w-[300px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-low border-none rounded-lg text-sm focus:ring-1 focus:ring-primary" placeholder="Search by Course Name or Resource ID..." type="text"/>
+</div>
+<div class="w-48">
+<select class="w-full bg-surface-container-low border-none rounded-lg text-sm py-2.5 px-4 focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+<option value="">Source: All</option>
+<option value="local">Local Storage</option>
+<option value="youtube">YouTube</option>
+<option value="bilibili">Bilibili</option>
+</select>
+</div>
+<button class="bg-secondary-container text-on-secondary-container px-5 py-2.5 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-on-secondary-fixed-variant/10 transition-all active:scale-95">
+<span class="material-symbols-outlined text-lg" data-icon="inventory_2">inventory_2</span>
+                Batch Management
+            </button>
+</div>
+<!-- Data Table -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm mb-6">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50 text-on-surface-variant font-headline text-xs uppercase tracking-wider">
+<th class="px-6 py-4 font-bold w-20">ID</th>
+<th class="px-6 py-4 font-bold">Cover</th>
+<th class="px-6 py-4 font-bold">Title</th>
+<th class="px-6 py-4 font-bold">Resource Type</th>
+<th class="px-6 py-4 font-bold">URL/Path</th>
+<th class="px-6 py-4 font-bold text-center">Chapters</th>
+<th class="px-6 py-4 font-bold text-center">Views</th>
+<th class="px-6 py-4 font-bold text-right">Operations</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-variant/30">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4 text-sm font-mono text-outline">#1024</td>
+<td class="px-6 py-4">
+<div class="w-16 h-10 rounded bg-surface-container overflow-hidden">
+<img alt="Cover" class="w-full h-full object-cover" data-alt="minimalist aesthetic illustration of architectural blueprint in soft blue and grey tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ-DrctR3hEV8HIZtPR-ryyqA3tz-a1OdnYdzaPEG_4_CBE9-9paH188gbvH7J8gX_RqKy7fsGHOr591pTjLO9SF2Mo3Gn5ajtjyMzCxLYLk37pLgQsvALDMqLe53F2E2ximsJaa8PZgd4HlDencBkBSUib7y1jv1ejnalMmg5VKfvvdr-asn3cVQkqlKmqVtbB3C2hcgzWBNYXTVQSYUWMpUuudsbv9SiNan_OY-CTdEV0YmtjvD9k4GURIgzLfBUEi0fFS8jt9w"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="font-headline font-semibold text-on-surface">Modernist Architecture 101</p>
+<p class="text-xs text-on-surface-variant">Introductory Design Theory</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight bg-primary/10 text-primary">Local</span>
+</td>
+<td class="px-6 py-4 max-w-[150px]">
+<p class="text-xs truncate text-outline">/nas/content/vids/arch101.mp4</p>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">12</td>
+<td class="px-6 py-4 text-center text-sm font-medium">1.4k</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-primary hover:bg-primary/10 rounded transition-all" title="Edit">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:bg-secondary/10 rounded transition-all" title="Preview">
+<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1.5 text-error hover:bg-error/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4 text-sm font-mono text-outline">#1025</td>
+<td class="px-6 py-4">
+<div class="w-16 h-10 rounded bg-surface-container overflow-hidden">
+<img alt="Cover" class="w-full h-full object-cover" data-alt="clean top-down photo of digital tablet displaying data charts on white wooden desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiRbFW0K-2B6PavwfriZM5HfTcx_U-8r7DXnwJc1iZp-BdUavxxfjcBY9y9Ig26psQaKh-Ew5iuZkEyNcF_Ia3VYpIbNN8nePfff8ornSF8pKF1FGbzlRXv7rSsVkekcAJ92UiItACyQVZEOMmXA8jvR4vtymddKzGEUWnyrBZKmtYgtVopoc9FtCrkLRFAy5J8ZbgGS0gVfjO_IF4xRmiuyxEgU7HkjKzzRAC5LI-fHmt-YMaKYgONTkk4lKzzZ_Sxd_OO9ZNeb8"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="font-headline font-semibold text-on-surface">Quantum Physics Explained</p>
+<p class="text-xs text-on-surface-variant">Science Outreach Program</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight bg-red-100 text-red-600">YouTube</span>
+</td>
+<td class="px-6 py-4 max-w-[150px]">
+<p class="text-xs truncate text-outline">dQw4w9WgXcQ</p>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">1</td>
+<td class="px-6 py-4 text-center text-sm font-medium">25.8k</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-primary hover:bg-primary/10 rounded transition-all" title="Edit">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:bg-secondary/10 rounded transition-all" title="Preview">
+<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1.5 text-error hover:bg-error/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4 text-sm font-mono text-outline">#1026</td>
+<td class="px-6 py-4">
+<div class="w-16 h-10 rounded bg-surface-container overflow-hidden">
+<img alt="Cover" class="w-full h-full object-cover" data-alt="vibrant abstract digital painting with pink and purple fluid shapes against dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnNzvvmPoMVQKZyw4A4SJRsRz4DNsAOvK2Gd1VrWU5kY-AlbEEyNtLz5pW_H9dX_zNG013Bh7UCQaAXB1Lmztspdz0jNI9PoHZJA98mhDK9_Jss5ndPUh08wmFCYkxUpfd3OOaGz79jCXbBRHZHjAlEDFs9FTYhtPee4MzWnrzEnU6zpYzW-7Z_cN6jf-TQx9JTCn7w4RwqJKkL8IZZCkArWy1U1Uj-kcPjT-IKLUaZKogXthnuVEqsbB2De8x0UoS4vrjrfVTrMc"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="font-headline font-semibold text-on-surface">UI/UX Advanced Masterclass</p>
+<p class="text-xs text-on-surface-variant">Design Academy Essentials</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight bg-pink-100 text-pink-600">Bilibili</span>
+</td>
+<td class="px-6 py-4 max-w-[150px]">
+<p class="text-xs truncate text-outline">BV1GJ411x7FG</p>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">24</td>
+<td class="px-6 py-4 text-center text-sm font-medium">8.2k</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-1.5 text-primary hover:bg-primary/10 rounded transition-all" title="Edit">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:bg-secondary/10 rounded transition-all" title="Preview">
+<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1.5 text-error hover:bg-error/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between px-2">
+<span class="text-sm text-on-surface-variant">Showing 1 to 10 of 54 resources</span>
+<div class="flex gap-1">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-all text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold shadow-sm">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-all">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-all">3</button>
+<span class="w-10 h-10 flex items-center justify-center">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-all">6</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-all text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Simulated Edit Drawer (Overlay) -->
+<div class="fixed inset-y-0 right-0 w-[480px] bg-surface-container-lowest shadow-[-12px_0_32px_rgba(43,52,55,0.06)] z-[60] flex flex-col border-l border-surface-variant/20">
+<!-- Drawer Header -->
+<div class="px-8 py-6 flex justify-between items-center border-b border-surface-container">
+<h3 class="text-xl font-bold font-headline text-on-surface">Edit Course Details</h3>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Drawer Content -->
+<div class="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
+<form class="space-y-8">
+<!-- Resource Type -->
+<div class="space-y-3">
+<label class="text-xs font-bold font-headline uppercase tracking-widest text-on-surface-variant">Resource Type</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="flex items-center gap-3 p-3 rounded-lg border border-surface-container hover:bg-surface-container-low cursor-pointer transition-all">
+<input checked="" class="text-primary focus:ring-primary w-4 h-4" name="res_type" type="radio"/>
+<span class="text-sm font-medium">Local Video</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-surface-container hover:bg-surface-container-low cursor-pointer transition-all">
+<input class="text-primary focus:ring-primary w-4 h-4" name="res_type" type="radio"/>
+<span class="text-sm font-medium">YouTube ID</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-surface-container hover:bg-surface-container-low cursor-pointer transition-all">
+<input class="text-primary focus:ring-primary w-4 h-4" name="res_type" type="radio"/>
+<span class="text-sm font-medium">Bilibili BV</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-surface-container hover:bg-surface-container-low cursor-pointer transition-all">
+<input class="text-primary focus:ring-primary w-4 h-4" name="res_type" type="radio"/>
+<span class="text-sm font-medium">External Link</span>
+</label>
+</div>
+</div>
+<!-- Resource URL -->
+<div class="space-y-2">
+<label class="text-xs font-bold font-headline uppercase tracking-widest text-on-surface-variant">Resource URL / Path</label>
+<input class="w-full bg-surface-container-high border-none border-b-2 border-primary rounded-t-lg py-3 px-4 focus:ring-0 text-sm font-mono" type="text" value="/nas/content/vids/arch101.mp4"/>
+<p class="text-[10px] text-outline italic">For YouTube, provide the 11-character video ID only.</p>
+</div>
+<!-- Title -->
+<div class="space-y-2">
+<label class="text-xs font-bold font-headline uppercase tracking-widest text-on-surface-variant">Course Title</label>
+<input class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 focus:ring-1 focus:ring-primary text-sm" type="text" value="Modernist Architecture 101"/>
+</div>
+<!-- Description -->
+<div class="space-y-2">
+<label class="text-xs font-bold font-headline uppercase tracking-widest text-on-surface-variant">Description</label>
+<textarea class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 focus:ring-1 focus:ring-primary text-sm resize-none" rows="4">A comprehensive dive into the origins and evolution of modernist architectural theory, covering the works of Le Corbusier, Mies van der Rohe, and Frank Lloyd Wright.</textarea>
+</div>
+<!-- Cover Upload -->
+<div class="space-y-3">
+<label class="text-xs font-bold font-headline uppercase tracking-widest text-on-surface-variant">Cover Image</label>
+<div class="flex gap-4 items-center">
+<div class="w-32 h-20 rounded-lg bg-surface-container overflow-hidden relative group cursor-pointer">
+<img alt="Current Cover" class="w-full h-full object-cover" data-alt="close-up of architectural texture concrete wall with clean shadows and geometric lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9Z2xEQ4iK-TKI1upWqorkwuvRJPjxt8vKqRvBfrQ8VJUBZI7t4lwdlZa7dqYT6ukdGeywZsx1Dz2MfJdWK_vmznKoINC0qmhnujz9QCcmP2uJ-1wMWzHBozfVaozNkSh9OsQUl4Qqg2lCeYq6bVeXjEKQsYO1tItggBK5MAQ2UNWk6NJtuVX9F2hTXGRw7-gUP4TdzEPzZPe-Q2uqE-udwsCK0jFB3iL3-_rbL346cjowuXW-7IDCjEqtgWpXksghtNf4xKKOOE8"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white" data-icon="cloud_upload">cloud_upload</span>
+</div>
+</div>
+<div class="flex-1">
+<p class="text-xs text-on-surface font-medium">architecture_hero_v2.jpg</p>
+<p class="text-[10px] text-on-surface-variant">PNG, JPG or WebP up to 5MB</p>
+<button class="text-primary text-xs font-bold mt-2 hover:underline" type="button">Change image</button>
+</div>
+</div>
+</div>
+</form>
+</div>
+<!-- Drawer Footer -->
+<div class="p-8 border-t border-surface-container bg-surface-container-low/30 flex gap-3">
+<button class="flex-1 bg-primary text-on-primary py-3 rounded-lg font-headline font-bold shadow-sm hover:bg-primary-dim transition-all active:scale-95">Save Changes</button>
+<button class="px-6 py-3 rounded-lg font-headline font-semibold text-on-surface hover:bg-surface-container transition-all">Cancel</button>
+</div>
+</div>
+</main>
+<!-- Overlay backdrop for Drawer (Visual only) -->
+<div class="fixed inset-0 bg-on-background/10 backdrop-blur-sm z-50 pointer-events-none"></div>
+</body></html>

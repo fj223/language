@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Public+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface-variant": "#586064",
+              "inverse-primary": "#86aef7",
+              "surface-container-highest": "#dbe4e7",
+              "background": "#f8f9fa",
+              "outline-variant": "#abb3b7",
+              "inverse-on-surface": "#9b9d9e",
+              "error-dim": "#4e0309",
+              "on-error-container": "#752121",
+              "on-primary-fixed-variant": "#305b9e",
+              "secondary-fixed-dim": "#d3d4da",
+              "tertiary-fixed-dim": "#cecfef",
+              "outline": "#737c7f",
+              "on-secondary-container": "#4f5257",
+              "error-container": "#fe8983",
+              "on-tertiary": "#fbf8ff",
+              "surface-container-high": "#e3e9ec",
+              "error": "#9f403d",
+              "secondary": "#5d5f64",
+              "surface-container": "#eaeff1",
+              "on-error": "#fff7f6",
+              "tertiary-fixed": "#ddddfe",
+              "on-tertiary-fixed-variant": "#565873",
+              "primary-fixed-dim": "#c1d5ff",
+              "surface-variant": "#dbe4e7",
+              "inverse-surface": "#0c0f10",
+              "tertiary": "#5b5d78",
+              "on-primary": "#f7f7ff",
+              "on-secondary-fixed-variant": "#595b61",
+              "on-secondary": "#f8f8ff",
+              "on-primary-container": "#235194",
+              "primary-container": "#d7e3ff",
+              "on-secondary-fixed": "#3d3f44",
+              "secondary-dim": "#515358",
+              "surface-container-lowest": "#ffffff",
+              "primary-fixed": "#d7e3ff",
+              "on-tertiary-container": "#4c4e69",
+              "surface-bright": "#f8f9fa",
+              "secondary-container": "#e1e2e9",
+              "on-tertiary-fixed": "#3a3c55",
+              "secondary-fixed": "#e1e2e9",
+              "surface-container-low": "#f1f4f6",
+              "on-primary-fixed": "#043e80",
+              "tertiary-dim": "#4f516c",
+              "primary-dim": "#245294",
+              "surface-tint": "#335ea1",
+              "on-background": "#2b3437",
+              "tertiary-container": "#ddddfe",
+              "primary": "#335ea1",
+              "on-surface": "#2b3437",
+              "surface-dim": "#d1dce0",
+              "surface": "#f8f9fa"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Public Sans"],
+              "label": ["Public Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Public Sans', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased">
+<!-- TopNavBar Shell -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-8 h-16 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-12 flex-1">
+<span class="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-100">OpenEdu</span>
+<!-- Search Bar (on_left as per JSON) -->
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-high border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-body" placeholder="Search courses..." type="text" value="Python"/>
+</div>
+<div class="hidden md:flex items-center space-x-8 font-manrope text-sm font-medium">
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1" href="#">Browse</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors duration-200" href="#">My Learning</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors duration-200" href="#">Mentors</a>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800 h-[1px]"></div>
+</nav>
+<main class="pt-16 max-w-screen-2xl mx-auto flex">
+<!-- SideNavBar (Filter Sidebar) -->
+<aside class="h-screen w-80 sticky top-16 bg-slate-50 dark:bg-slate-950 flex flex-col p-6 space-y-8 overflow-y-auto font-public-sans text-sm">
+<div>
+<div class="flex justify-between items-center mb-1">
+<h2 class="text-lg font-bold text-on-surface">Filters</h2>
+<button class="text-primary font-medium hover:underline text-xs">Reset All</button>
+</div>
+<p class="text-on-surface-variant text-xs mb-6">Refine your search</p>
+</div>
+<!-- Filter Groups -->
+<div class="space-y-8">
+<!-- Source -->
+<section>
+<div class="flex items-center gap-2 mb-4 text-primary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="source">source</span>
+<span class="uppercase tracking-wider text-[11px]">Source</span>
+</div>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Local</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">YouTube</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">MOOC</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">XuetangX</span>
+</label>
+</div>
+</section>
+<!-- Category -->
+<section>
+<div class="flex items-center gap-2 mb-4 text-primary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="category">category</span>
+<span class="uppercase tracking-wider text-[11px]">Category</span>
+</div>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">CS</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Math</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Languages</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Arts</span>
+</label>
+</div>
+</section>
+<!-- Difficulty -->
+<section>
+<div class="flex items-center gap-2 mb-4 text-primary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="signal_cellular_alt">signal_cellular_alt</span>
+<span class="uppercase tracking-wider text-[11px]">Difficulty</span>
+</div>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Intro</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Intermediate</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Advanced</span>
+</label>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<div class="mt-auto pt-8">
+<a class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Help Center</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 p-10 bg-surface">
+<!-- Header -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h1 class="text-3xl font-extrabold text-on-surface mb-2 tracking-tight">Search Results</h1>
+<p class="text-on-surface-variant font-body">Showing <span class="font-bold text-primary">1,240</span> free courses for "Python"</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Sort By</span>
+<select class="bg-surface-container-lowest border-none rounded-lg text-sm px-4 py-2 pr-10 focus:ring-2 focus:ring-primary/20 font-medium text-on-surface cursor-pointer shadow-sm">
+<option>Recommended</option>
+<option>Newest</option>
+<option>Most Viewed</option>
+</select>
+</div>
+</div>
+<!-- Course List -->
+<div class="space-y-6">
+<!-- Course Item 1 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex gap-8 items-center transition-all hover:translate-y-[-2px] hover:shadow-lg group">
+<div class="w-72 shrink-0 aspect-video rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern high-tech workspace with computer screens displaying green python code on dark background with soft neon lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPlIFiKIId-srT6Zore0EhFURi9yxFmHUjtQRWpLUxLU1oWnvgH7MI5CpdveOV6gJMv9KDZk2XcsE8N3miKb2tchnVSojg7l1CnRuuZD6Iw18VD7hmVhYaOhpnPbRLScxQTHdC3Voma_BxXJeMD9Y4eVXl5b-omiNh-5usiClr9iXsukQXMxn6KaDaCajYNrUfTHA-V4mGnpqG3yUDAvSE1y5quoGJIdyh7Ks9s9j4nrhS3rL_kwOeQ5IogSD00UgD8gHiSj937HE"/>
+<div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">12:45:00</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700">YouTube</span>
+<span class="text-on-surface-variant text-xs">• 24.5k learners</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors truncate">Full-stack Python Development: From Zero to Hero</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2 mb-4 font-body leading-relaxed">
+                            Master modern Python 3.12, Django 5.0, and React integration. This comprehensive course covers database design, API security, and cloud deployment on AWS.
+                        </p>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="text-xs font-semibold text-on-surface">Dr. Angela Smith</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">favorite</span>
+<span class="text-xs text-on-surface-variant">1,204 favorites</span>
+</div>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end gap-3 px-4">
+<button class="px-6 py-2 rounded-lg border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all whitespace-nowrap">
+                            免费学习
+                        </button>
+</div>
+</div>
+<!-- Course Item 2 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex gap-8 items-center transition-all hover:translate-y-[-2px] hover:shadow-lg group">
+<div class="w-72 shrink-0 aspect-video rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Digital art representing data science with glowing connecting nodes and floating abstract charts in shades of deep blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmuBytlbXFh_ZmErBksSpg83Tg_PWwv1sNNhczwbVX15rNxRS4rKTl2yBUQxIaVFc4t7WWUVK5nlahTX0fzy3OTLYmBUoXZmi6vSlds5zLsBhm1DR33mlt-EStlNbGGuQkOGt3_m3iSAaEqfhRY48I7owVOaqTV7Cy1AgWgU_SV_RT0q76iXKT_1yMSbiHdX2VjrOsUDizg34WN1sbcLpWFUMr4bYEgbtYDynd5RHnutePNpjoz17bHAteWg8PTTGxiFP41SN4Iew"/>
+<div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">08:12:30</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700">Local</span>
+<span class="text-on-surface-variant text-xs">• 12.1k learners</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors truncate">Data Analysis with Python and Pandas</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2 mb-4 font-body leading-relaxed">
+                            Learn how to manipulate large datasets, perform statistical analysis, and create stunning visualizations with Matplotlib and Seaborn.
+                        </p>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="text-xs font-semibold text-on-surface">Stanford Online</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">favorite</span>
+<span class="text-xs text-on-surface-variant">856 favorites</span>
+</div>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end gap-3 px-4">
+<button class="px-6 py-2 rounded-lg border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all whitespace-nowrap">
+                            免费学习
+                        </button>
+</div>
+</div>
+<!-- Course Item 3 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex gap-8 items-center transition-all hover:translate-y-[-2px] hover:shadow-lg group">
+<div class="w-72 shrink-0 aspect-video rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Close-up of elegant mechanical parts of a vintage watch representing precision and complex logic systems" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwYc_9lO1SxaaVIQMdaNYD7KWgd8nQFuEceWftALlALiSx-kjCjNKyQO-EcX86wzbxepUFjWb_wCaWYGjUR7r4WCGZ3dPEs6Islksa-D1lAdKTSuo-0ReXxLARrMRWKBgH33o98SRNTc8r15hUm6f2Y_jrkGRBpaUdNM0SQOXCiNCdDAxXGr5skQFYZKzlyUvOke-feFJDuBT6Mn_y3u_PaPtxNSV2YR-8MHfvuPOei6J8OtErzetEs0saPReYBPPatNUuGUuvXvQ"/>
+<div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">15:55:00</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700">MOOC</span>
+<span class="text-on-surface-variant text-xs">• 45.2k learners</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors truncate">Python for Algorithms and Data Structures</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2 mb-4 font-body leading-relaxed">
+                            A deep dive into fundamental algorithms, complexity analysis (Big O), and common interview patterns. Essential for career advancement.
+                        </p>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="text-xs font-semibold text-on-surface">Prof. James Lee</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">favorite</span>
+<span class="text-xs text-on-surface-variant">3,490 favorites</span>
+</div>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end gap-3 px-4">
+<button class="px-6 py-2 rounded-lg border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all whitespace-nowrap">
+                            免费学习
+                        </button>
+</div>
+</div>
+<!-- Course Item 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex gap-8 items-center transition-all hover:translate-y-[-2px] hover:shadow-lg group">
+<div class="w-72 shrink-0 aspect-video rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract representation of artificial intelligence with glowing white brain network lines on a dark moody background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsPMuzjYvmPnhDTuaarLTFDDDkAt2gvPKBuh6gvrqUwRm_l-fdyHf6xiLqMg8SDDCWD4_Gm6xzTChkN-l3XYN6LcBfzfpDcgozomX34Jc8vqXjc6VtO35ZUQZ1bOAnkXabDu-IJYLUtIgOmKJ4gy8NwUnvjmqxViCdxsKIVeR35GfHEZHWNH5PNeJSPLiN15Nl8CWnjkgwJH086yo9PnP-ZHKyYRFE-NG_YoQgP0XYZ5eCY5kmykCyBUf5dKygqqRXrWj2beCQd00"/>
+<div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">22:05:10</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700">Bilibili</span>
+<span class="text-on-surface-variant text-xs">• 9.8k learners</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors truncate">Python Artificial Intelligence: PyTorch Essentials</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2 mb-4 font-body leading-relaxed">
+                            Build neural networks from scratch using PyTorch. Understand gradients, tensors, and deep learning architectures for computer vision.
+                        </p>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="text-xs font-semibold text-on-surface">Tsinghua University</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">favorite</span>
+<span class="text-xs text-on-surface-variant">512 favorites</span>
+</div>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end gap-3 px-4">
+<button class="px-6 py-2 rounded-lg border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all whitespace-nowrap">
+                            免费学习
+                        </button>
+</div>
+</div>
+</div>
+<!-- Pagination (Element Plus Style) -->
+<div class="mt-16 flex justify-center">
+<nav class="flex items-center gap-1 font-body text-sm font-medium">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container transition-colors">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container transition-colors">4</button>
+<span class="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container transition-colors">124</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-primary-container text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</nav>
+</div>
+</section>
+</main>
+<!-- Bottom Margin for sticky footer space if needed -->
+<div class="h-10"></div>
+</body></html>

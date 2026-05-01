@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum VideoResourceType {
+  local
+  youtube
+  bilibili
+  external_link
+}
+
+model Course {
+  id          String          @id @default(cuid()) @db.VarChar(191)
+  title       String          @db.VarChar(200)
+  coverUrl    String?         @db.VarChar(2048)
+  description String?         @db.Text
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  videoResources VideoResource[]
+  studyRecords   StudyRecord[]
+}
+
+model VideoResource {
+  id           String            @id @default(cuid()) @db.VarChar(191)
+  courseId     String            @db.VarChar(191)
+  resourceType VideoResourceType @map("resource_type")
+  sourceUrl    String            @map("source_url") @db.Text
+  title        String?           @db.VarChar(200)
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+model Flashcard {
+  id         String   @id @default(cuid()) @db.VarChar(191)
+  userId     String?  @db.VarChar(191)
+  videoId    String   @db.VarChar(191)
+  term       String   @db.VarChar(500)
+  definition String   @db.Text
+  example    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([videoId])
+}
+
+model StudyRecord {
+  id                  String    @id @default(cuid()) @db.VarChar(191)
+  userId              String    @db.VarChar(191)
+  courseId            String    @db.VarChar(191)
+  progressPercent     Float     @default(0)
+  lastPositionSeconds Int       @default(0)
+  isCompleted         Boolean   @default(false)
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
