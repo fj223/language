@@ -1,10 +1,13 @@
 import { Router } from 'express'
+import type { Request } from 'express'
 import { Prisma, VideoResourceType } from '@prisma/client'
 import { prisma } from '../db/prisma.js'
 import { sendError, sendOk } from '../lib/apiResponse.js'
 import { serializeCourse, serializeResource } from '../lib/serializers.js'
 import { requireAdmin } from '../middleware/adminAuth.js'
+import { optionalStudentAuth } from '../middleware/studentAuth.js'
 import { chatRateLimit } from '../middleware/rateLimit.js'
+import { handleChatbot, postChat } from '../controllers/chatbotController.js'
 
 const router = Router()
 
@@ -366,10 +369,12 @@ router.delete('/courses/:courseId/resources/:resourceId', requireAdmin, async (r
 // === Progress ===
 // ============================================================
 
-const ANONYMOUS_USER_ID = 'anonymous'
+function getUserId(req: Request): string {
+  return req.student?.studentId ?? 'anonymous'
+}
 
 // GET /courses/:id/progress
-router.get('/courses/:id/progress', async (req, res) => {
+router.get('/courses/:id/progress', optionalStudentAuth, async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
@@ -377,8 +382,9 @@ router.get('/courses/:id/progress', async (req, res) => {
     const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
     if (!course) { sendError(res, 'course not found', 404); return }
 
+    const userId = getUserId(req)
     const record = await prisma.studyRecord.findUnique({
-      where: { userId_courseId: { userId: ANONYMOUS_USER_ID, courseId } },
+      where: { userId_courseId: { userId, courseId } },
     })
 
     if (!record) {
@@ -399,7 +405,7 @@ router.get('/courses/:id/progress', async (req, res) => {
 })
 
 // POST /courses/:id/progress
-router.post('/courses/:id/progress', async (req, res) => {
+router.post('/courses/:id/progress', optionalStudentAuth, async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
@@ -440,11 +446,12 @@ router.post('/courses/:id/progress', async (req, res) => {
       updateData.completedAt = new Date()
     }
 
+    const userId = getUserId(req)
     const record = await prisma.studyRecord.upsert({
-      where: { userId_courseId: { userId: ANONYMOUS_USER_ID, courseId } },
+      where: { userId_courseId: { userId, courseId } },
       update: updateData,
       create: {
-        userId: ANONYMOUS_USER_ID,
+        userId,
         courseId,
         lastPositionSeconds: Math.round(rawCurrentTime),
         progressPercent: progressPercent ?? 0,
@@ -453,14 +460,13 @@ router.post('/courses/:id/progress', async (req, res) => {
       },
     })
 
-    console.log('[progress] recorded', { courseId, currentTime: rawCurrentTime, duration, isCompleted: record.isCompleted })
+    console.log('[progress] recorded', { userId, courseId, currentTime: rawCurrentTime, duration, isCompleted: record.isCompleted })
 
     sendOk(res, {
       recorded: true,
       studyRecordId: record.id,
       isCompleted: record.isCompleted,
       lastPositionSeconds: record.lastPositionSeconds,
-      note: 'anonymous mode, will be replaced in Phase 4',
     })
   } catch (err) {
     console.error('[progress] DB write failed', err)
@@ -469,55 +475,86 @@ router.post('/courses/:id/progress', async (req, res) => {
 })
 
 // ============================================================
-// === Flashcards ===
+// === Chatbot (Intent-based, non-streaming) ===
 // ============================================================
 
-// POST /flashcards
-router.post('/flashcards', async (req, res) => {
+// POST /chatbot/intent — 纯意图识别（不调用 AI，仅正则匹配，无 rate limit）
+// Body: { message: string }
+// Returns: { ok: true, data: { intent: 'TIMETABLE'|'GRADES'|'TRANSLATE'|'FALLBACK', needsAuth: boolean } }
+router.post('/chatbot/intent', postChat)
+
+// POST /chatbot — 完整 RAG 流程
+// Body: { message: string, studentId: string }
+// Returns: { ok: true, data: { reply, intent, studentId } }
+router.post('/chatbot', chatRateLimit, handleChatbot)
+
+// ============================================================
+// POST /chatbot/flashcard — 非流式知识点提取
+// ============================================================
+
+router.post('/chatbot/flashcard', chatRateLimit, async (req, res) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>
-    const videoId = typeof body.videoId === 'string' ? body.videoId.trim() : ''
-    const term = typeof body.term === 'string' ? body.term.trim() : ''
-    const definition = typeof body.definition === 'string' ? body.definition.trim() : ''
-    const example = typeof body.example === 'string' ? body.example.trim() || null : null
-    const userId = typeof body.userId === 'string' ? body.userId.trim() || null : null
+    const content = typeof body.content === 'string' ? body.content.trim() : ''
 
-    if (!videoId) { sendError(res, 'videoId is required', 400); return }
-    if (!term) { sendError(res, 'term is required', 400); return }
-    if (!definition) { sendError(res, 'definition is required', 400); return }
+    if (!content) { sendError(res, 'content is required', 400); return }
+    if (content.length > 8000) { sendError(res, 'content too long (max 8000 chars)', 400); return }
 
-    const card = await prisma.flashcard.create({
-      data: { videoId, term, definition, example, userId },
+    const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
+    if (!apiKey) { sendError(res, 'AI is not configured on server', 503); return }
+
+    const baseUrl = normalizeBaseUrl(process.env.AI_BASE_URL || 'https://api.openai.com')
+    const model = process.env.AI_MODEL || 'gpt-4o-mini'
+    const endpoint = `${baseUrl}/chat/completions`
+
+    const prompt = `请从以下内容中提取最核心的一个知识点，严格以 JSON 格式返回，只返回 JSON，不要任何其他文字或代码块包裹。
+JSON 字段要求：
+- term: 核心词汇或概念名称
+- definition: 包含拼音/音标、词性及详细中文解释（50-150字）
+- example: 经典双语例句（英文例句 / 中文翻译）
+内容：
+${content}`
+
+    const upstream = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 512,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(30_000),
     })
 
-    sendOk(res, card, 201)
-  } catch (err) {
-    sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
-  }
-})
+    if (!upstream.ok) {
+      console.error('[flashcard] AI error', upstream.status)
+      sendError(res, 'AI extraction failed', 502)
+      return
+    }
 
-// GET /flashcards
-router.get('/flashcards', async (req, res) => {
-  try {
-    const videoId = typeof req.query.videoId === 'string' ? req.query.videoId.trim() : ''
-    const where = videoId ? { videoId } : {}
-    const cards = await prisma.flashcard.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+    const json = await upstream.json() as {
+      choices?: Array<{ message?: { content?: string } }>
+    }
+    const raw = json.choices?.[0]?.message?.content?.trim()
+    if (!raw) { sendError(res, 'AI returned empty response', 502); return }
+
+    // 正则剥离 Markdown 代码块
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (!match) { sendError(res, 'AI response is not valid JSON', 502); return }
+
+    const parsed = JSON.parse(match[0]) as { term?: string; definition?: string; example?: string }
+    if (!parsed.term || !parsed.definition) {
+      sendError(res, 'Extracted data is incomplete', 502)
+      return
+    }
+
+    sendOk(res, {
+      term: parsed.term,
+      definition: parsed.definition,
+      example: parsed.example ?? '',
     })
-    sendOk(res, cards)
-  } catch (err) {
-    sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
-  }
-})
-
-// DELETE /flashcards/:id
-router.delete('/flashcards/:id', async (req, res) => {
-  try {
-    const id = typeof req.params.id === 'string' ? req.params.id : ''
-    if (!id) { sendError(res, 'id is required', 400); return }
-    await prisma.flashcard.delete({ where: { id } })
-    sendOk(res, { id })
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
   }
@@ -577,6 +614,7 @@ router.post('/chat', chatRateLimit, async (req, res) => {
   const model = process.env.AI_MODEL || 'gpt-4o-mini'
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  // 禁用 Nginx 等反向代理缓存，保障 TTFB 性能
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
   res.setHeader('X-Accel-Buffering', 'no')

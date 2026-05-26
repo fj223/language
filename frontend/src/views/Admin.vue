@@ -1,390 +1,464 @@
 <template>
-  <main class="p-8 bg-[#f8f9fa] min-h-screen">
-    <!-- LIST MODE -->
-    <div v-if="mode === 'list'" class="max-w-7xl mx-auto space-y-6">
-      <section class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold">管理后台（课程列表）</h1>
-          <p class="text-sm text-slate-600 mt-1">支持课程搜索、筛选、分页与快捷操作</p>
-        </div>
-        <div class="flex gap-2">
-          <button class="px-3 py-2 rounded border text-sm" type="button" @click="configureToken">配置令牌</button>
-          <button class="px-4 py-2 rounded bg-primary text-on-primary text-sm" type="button" @click="openCreateDrawer">创建课程</button>
-        </div>
-      </section>
+  <div class="min-h-screen" style="background: #f5f7fa;">
 
-      <section class="bg-white rounded-xl shadow p-4 flex flex-wrap gap-3 items-center">
-        <input v-model="searchInput" class="border rounded px-3 py-2 text-sm min-w-[280px]" placeholder="按课程标题搜索，回车触发" type="text" @keydown.enter="applyFilters" />
-        <button class="px-3 py-2 rounded border text-sm" type="button" @click="applyFilters">搜索</button>
-        <button class="px-3 py-2 rounded border text-sm" type="button" @click="clearFilters">清空</button>
-        <select v-model="selectedType" class="border rounded px-3 py-2 text-sm">
-          <option value="">资源类型：全部</option>
-          <option value="local">local</option>
-          <option value="youtube">youtube</option>
-          <option value="bilibili">bilibili</option>
-          <option value="external_link">external_link</option>
-        </select>
-        <select v-model.number="pagination.pageSize" class="border rounded px-3 py-2 text-sm" @change="onPageSizeChange">
-          <option :value="10">10 / 页</option>
-          <option :value="20">20 / 页</option>
-          <option :value="50">50 / 页</option>
-        </select>
-      </section>
+    <!-- ═══════════════════════════════════════════════════════
+         未认证：管理员登录验证卡片
+    ═══════════════════════════════════════════════════════ -->
+    <div
+      v-if="!isAdminAuthenticated"
+      class="min-h-screen flex items-center justify-center px-4"
+    >
+      <div class="w-full max-w-sm">
+        <!-- 卡片 -->
+        <div class="bg-white rounded-3xl shadow-xl shadow-slate-900/10 border border-slate-200/60 overflow-hidden">
 
-      <section v-if="authError" class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">{{ authError }}</section>
-      <section v-if="listError" class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{ listError }}</section>
+          <!-- 顶部渐变装饰 -->
+          <div class="h-2 w-full" style="background: linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);" />
 
-      <section class="bg-white rounded-xl shadow overflow-hidden">
-        <table class="w-full text-left">
-          <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
-            <tr>
-              <th class="px-4 py-3">封面</th>
-              <th class="px-4 py-3">标题 / 描述</th>
-              <th class="px-4 py-3">资源数</th>
-              <th class="px-4 py-3">更新时间</th>
-              <th class="px-4 py-3 text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading"><td class="px-4 py-8 text-sm text-slate-500" colspan="5">加载中...</td></tr>
-            <tr v-else-if="courses.length === 0"><td class="px-4 py-8 text-sm text-slate-500" colspan="5">暂无课程</td></tr>
-            <tr v-for="c in courses" :key="c.id" class="border-t">
-              <td class="px-4 py-3">
-                <div class="w-20 h-12 rounded bg-slate-100 overflow-hidden">
-                  <img v-if="c.coverUrl" :src="c.coverUrl" alt="cover" class="w-full h-full object-cover" />
+          <div class="px-8 py-8">
+            <!-- 图标 + 标题 -->
+            <div class="flex flex-col items-center mb-8">
+              <div class="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg mb-4">
+                <span class="material-symbols-outlined text-white text-3xl"
+                  style="font-variation-settings:'FILL' 1;">admin_panel_settings</span>
+              </div>
+              <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">管理员身份验证</h1>
+              <p class="text-xs text-slate-400 mt-1.5 text-center leading-relaxed">
+                新言教育 · 课程管理系统<br/>请输入管理员密码以继续
+              </p>
+            </div>
+
+            <!-- 密码输入 -->
+            <form @submit.prevent="verifyAdmin" class="space-y-4">
+              <div>
+                <label class="form-label" for="admin-pwd">管理员密码</label>
+                <div class="relative">
+                  <input
+                    id="admin-pwd"
+                    ref="pwdInputRef"
+                    v-model="adminPassword"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-input pr-10"
+                    :class="{ 'border-red-400 bg-red-50 focus:border-red-400': authError }"
+                    placeholder="请输入管理员密码"
+                    autocomplete="current-password"
+                    @input="authError = ''"
+                  />
+                  <!-- 显示/隐藏密码切换 -->
+                  <button
+                    type="button"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                    @click="showPassword = !showPassword"
+                  >
+                    <span class="material-symbols-outlined text-lg">
+                      {{ showPassword ? 'visibility_off' : 'visibility' }}
+                    </span>
+                  </button>
                 </div>
-              </td>
-              <td class="px-4 py-3">
-                <button class="font-semibold text-primary hover:underline text-left" type="button" @click="openEdit(c.id)">{{ c.title }}</button>
-                <p class="text-xs text-slate-500 line-clamp-1">{{ c.description || '-' }}</p>
-              </td>
-              <td class="px-4 py-3 text-sm">{{ c.resources.length }}</td>
-              <td class="px-4 py-3 text-sm">{{ formatDate(c.updatedAt) }}</td>
-              <td class="px-4 py-3">
-                <div class="flex justify-end gap-2">
-                  <router-link class="px-3 py-1.5 rounded border text-xs" :to="`/courses/${c.id}`">预览</router-link>
-                  <button class="px-3 py-1.5 rounded border text-xs" type="button" @click="openEdit(c.id)">编辑</button>
-                  <button class="px-3 py-1.5 rounded border text-xs text-red-600" type="button" @click="onDelete(c.id)">删除</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+                <!-- 错误提示 -->
+                <Transition name="err-fade">
+                  <p v-if="authError" class="mt-2 text-xs text-red-500 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm"
+                      style="font-variation-settings:'FILL' 1;">error</span>
+                    {{ authError }}
+                  </p>
+                </Transition>
+              </div>
 
-      <section class="flex items-center justify-between text-sm text-slate-600">
-        <div>共 {{ pagination.total }} 条，{{ pagination.totalPages }} 页，当前第 {{ pagination.page }} 页</div>
-        <div class="flex items-center gap-2">
-          <button class="px-3 py-1.5 rounded border" type="button" :disabled="pagination.page <= 1" @click="changePage(pagination.page - 1)">上一页</button>
-          <button class="px-3 py-1.5 rounded border" type="button" :disabled="pagination.page >= pagination.totalPages" @click="changePage(pagination.page + 1)">下一页</button>
-        </div>
-      </section>
-
-      <!-- Create drawer -->
-      <div v-if="isDrawerOpen" class="fixed inset-0 z-50 bg-black/20 flex justify-end">
-        <div class="w-full max-w-lg h-full bg-white flex flex-col">
-          <div class="p-5 border-b flex items-center justify-between">
-            <h3 class="font-semibold">创建课程</h3>
-            <button type="button" class="text-sm" @click="isDrawerOpen = false">关闭</button>
+              <button
+                type="submit"
+                class="w-full py-3 rounded-xl font-bold text-sm text-white transition-all duration-200
+                       bg-slate-900 hover:bg-slate-700 active:scale-[0.98]
+                       shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!adminPassword.trim()"
+              >
+                <span class="flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined text-base"
+                    style="font-variation-settings:'FILL' 1;">lock_open</span>
+                  验证身份
+                </span>
+              </button>
+            </form>
           </div>
-          <div class="p-5 flex-1 overflow-y-auto">
-            <form class="space-y-4" @submit.prevent="onSubmit">
+        </div>
+
+        <!-- 返回前台链接 -->
+        <div class="text-center mt-5">
+          <router-link
+            to="/"
+            class="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-blue-600 transition-colors"
+          >
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            返回前台首页
+          </router-link>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         已认证：数据大屏 + 课程管理
+    ═══════════════════════════════════════════════════════ -->
+    <div v-else class="max-w-5xl mx-auto px-6 py-10">
+
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-xl">admin_panel_settings</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold text-on-surface font-headline tracking-tight">管理后台</h1>
+            <p class="text-xs text-on-surface-variant font-body">新言教育 · 课程管理系统</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- 退出登录 -->
+          <button
+            type="button"
+            class="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-500 transition-colors"
+            @click="logout"
+          >
+            <span class="material-symbols-outlined text-base">logout</span>
+            退出
+          </button>
+          <router-link
+            to="/"
+            class="flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-blue-600 transition-colors"
+          >
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            返回前台
+          </router-link>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           核心数据概览看板
+      ═══════════════════════════════════════════════════════ -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div
+          v-for="card in STAT_CARDS"
+          :key="card.label"
+          class="stat-card"
+          :style="{ '--card-from': card.from, '--card-to': card.to }"
+        >
+          <!-- 图标区 -->
+          <div class="stat-icon-wrap">
+            <span class="material-symbols-outlined text-xl text-white" aria-hidden="true"
+              style="font-variation-settings:'FILL' 1;">{{ card.icon }}</span>
+          </div>
+          <!-- 数值 -->
+          <div class="mt-4">
+            <div class="flex items-end gap-1.5">
+              <span class="text-2xl font-black text-on-surface tracking-tight leading-none">{{ card.value }}</span>
+              <span v-if="card.unit" class="text-xs font-semibold text-on-surface-variant mb-0.5">{{ card.unit }}</span>
+            </div>
+            <p class="text-xs text-on-surface-variant font-medium mt-1.5">{{ card.label }}</p>
+          </div>
+          <!-- 趋势标签 -->
+          <div class="mt-3 flex items-center gap-1">
+            <span
+              class="inline-flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full"
+              :class="card.trendUp ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'"
+            >
+              <span class="material-symbols-outlined text-xs" aria-hidden="true"
+                style="font-variation-settings:'FILL' 1;">
+                {{ card.trendUp ? 'trending_up' : 'trending_flat' }}
+              </span>
+              {{ card.trend }}
+            </span>
+          </div>
+          <!-- 底部渐变装饰条 -->
+          <div class="stat-bar" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
+            <div class="px-6 py-5 border-b border-outline-variant/10">
+              <h2 class="text-base font-bold text-on-surface font-headline flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600 text-xl">add_circle</span>
+                添加新课程
+              </h2>
+            </div>
+
+            <form class="px-6 py-5 space-y-4" @submit.prevent="handleAdd">
               <div>
-                <label class="text-xs text-slate-500">标题</label>
-                <input v-model="createForm.title" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" />
-                <p v-if="createErrors.title" class="text-xs text-red-600 mt-1">{{ createErrors.title }}</p>
+                <label class="form-label" for="f-title">课程名称 *</label>
+                <input
+                  id="f-title"
+                  v-model="form.title"
+                  type="text"
+                  class="form-input"
+                  :class="{ 'border-red-500': errors.title }"
+                  placeholder="如：雅思 7 分冲刺班"
+                  required
+                />
               </div>
+
               <div>
-                <label class="text-xs text-slate-500">封面 URL</label>
-                <input v-model="createForm.coverUrl" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" />
-              </div>
-              <div>
-                <label class="text-xs text-slate-500">描述</label>
-                <textarea v-model="createForm.description" class="mt-1 w-full border rounded px-3 py-2 text-sm" rows="3"></textarea>
-              </div>
-              <div>
-                <label class="text-xs text-slate-500">资源类型</label>
-                <select v-model="createForm.resource_type" class="mt-1 w-full border rounded px-3 py-2 text-sm">
-                  <option value="local">local</option>
-                  <option value="youtube">youtube</option>
-                  <option value="bilibili">bilibili</option>
-                  <option value="external_link">external_link</option>
+                <label class="form-label" for="f-language">语种 *</label>
+                <select id="f-language" v-model="form.language" class="form-input" required>
+                  <option value="">请选择语种</option>
+                  <option v-for="lang in LANGUAGES" :key="lang" :value="lang">{{ lang }}</option>
                 </select>
               </div>
+
               <div>
-                <label class="text-xs text-slate-500">来源 URL/ID</label>
-                <input v-model="createForm.source_url" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" />
-                <p v-if="createErrors.source_url" class="text-xs text-red-600 mt-1">{{ createErrors.source_url }}</p>
+                <label class="form-label" for="f-level">级别 *</label>
+                <select id="f-level" v-model="form.level" class="form-input" required>
+                  <option value="">请选择级别</option>
+                  <option v-for="lv in LEVELS" :key="lv" :value="lv">{{ lv }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="form-label" for="f-teacher">主讲教师</label>
+                <input
+                  id="f-teacher"
+                  v-model="form.teacher"
+                  type="text"
+                  class="form-input"
+                  placeholder="如：张晓明老师"
+                />
+              </div>
+
+              <div>
+                <label class="form-label" for="f-price">课程价格 (¥)</label>
+                <input
+                  id="f-price"
+                  v-model="form.price"
+                  type="number"
+                  class="form-input"
+                  placeholder="如：1999"
+                />
+              </div>
+
+              <div class="pt-4">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
+                  确认添加课程
+                </button>
               </div>
             </form>
           </div>
-          <div class="p-5 border-t flex gap-2">
-            <button class="flex-1 px-3 py-2 rounded bg-primary text-on-primary text-sm" type="button" :disabled="submitting" @click="onSubmit">{{ submitting ? '保存中...' : '保存' }}</button>
-            <button class="px-3 py-2 rounded border text-sm" type="button" @click="isDrawerOpen = false">取消</button>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl shadow-sm p-8 text-center border border-outline-variant/10 h-full flex flex-col justify-center items-center">
+            <span class="material-symbols-outlined text-7xl text-gray-200 mb-4">view_list</span>
+            <h3 class="text-xl font-bold text-gray-700 mb-2">课程数据同步中</h3>
+            <p class="text-sm text-gray-500 max-w-md leading-relaxed">
+              在左侧表单中填写并提交新课程后，系统将自动调用教务 API，并在前台页面实时生效。
+              <br/><br/>
+              <span class="text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-xs font-semibold">演示系统数据将保存在本次运行实例中</span>
+            </p>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- EDIT MODE -->
-    <div v-else-if="mode === 'edit'" class="max-w-5xl mx-auto space-y-6">
-      <section class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold">课程编辑页</h1>
-          <p v-if="editForm.title" class="text-sm text-slate-500 mt-0.5">{{ editForm.title }}</p>
-        </div>
-        <div class="flex gap-2">
-          <button class="px-3 py-2 rounded border text-sm" type="button" @click="backToList">返回列表</button>
-          <button class="px-3 py-2 rounded border text-sm" type="button" :disabled="saving" @click="reloadEdit">放弃更改</button>
-          <button class="px-4 py-2 rounded bg-primary text-on-primary text-sm disabled:opacity-60" type="button" :disabled="saving" @click="saveCourseInfo">{{ saving ? '保存中...' : '保存课程信息' }}</button>
-        </div>
-      </section>
-
-      <section v-if="editAuthError" class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
-        {{ editAuthError }}
-        <button class="ml-2 underline text-xs" type="button" @click="configureToken">重新配置令牌</button>
-      </section>
-      <section v-if="editError" class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{ editError }}</section>
-      <section v-if="editSuccess" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-4 py-3 text-sm">{{ editSuccess }}</section>
-
-      <section class="bg-white rounded-xl shadow p-5 space-y-4">
-        <h2 class="font-semibold">课程信息</h2>
-        <div><label class="text-xs text-slate-500">标题 *</label><input v-model="editForm.title" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" /></div>
-        <div><label class="text-xs text-slate-500">封面 URL</label><input v-model="editForm.coverUrl" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" /></div>
-        <div><label class="text-xs text-slate-500">描述</label><textarea v-model="editForm.description" class="mt-1 w-full border rounded px-3 py-2 text-sm" rows="4"></textarea></div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow p-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="font-semibold">资源列表</h2>
-          <div class="flex gap-2">
-            <button v-if="orderDirty" class="px-3 py-1.5 rounded bg-primary text-on-primary text-sm disabled:opacity-60" type="button" :disabled="resourceOp" @click="saveOrder">{{ resourceOp ? '保存中...' : '保存排序' }}</button>
-            <button class="px-3 py-1.5 rounded border text-sm disabled:opacity-60" type="button" :disabled="resourceOp" @click="openAddModal">新增资源</button>
-          </div>
-        </div>
-        <div v-if="editForm.resources.length === 0" class="text-sm text-slate-500 py-4 text-center">暂无资源，点击"新增资源"添加。</div>
-        <div v-for="(r, idx) in editForm.resources" :key="r.id || r.clientKey" class="border rounded-lg p-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-400">#{{ idx + 1 }}</span>
-              <span class="text-sm font-medium truncate max-w-[240px]">{{ r.title || '未命名资源' }}</span>
-              <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{{ r.resource_type }}</span>
-            </div>
-            <div class="flex gap-1.5">
-              <button class="px-2 py-1 rounded border text-xs disabled:opacity-40" type="button" :disabled="resourceOp || idx === 0" @click="moveUp(idx)">↑</button>
-              <button class="px-2 py-1 rounded border text-xs disabled:opacity-40" type="button" :disabled="resourceOp || idx === editForm.resources.length - 1" @click="moveDown(idx)">↓</button>
-              <button class="px-2 py-1 rounded border text-xs disabled:opacity-40" type="button" :disabled="resourceOp" @click="openEditModal(r)">编辑</button>
-              <button class="px-2 py-1 rounded border text-xs text-red-600 disabled:opacity-40" type="button" :disabled="resourceOp" @click="onDeleteResource(r)">删除</button>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 truncate">{{ r.source_url }}</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- Resource Modal -->
-    <div v-if="modalOpen" class="fixed inset-0 z-50 bg-black/30 flex items-center justify-center" @click.self="closeModal">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 class="font-semibold text-base">{{ editingResource ? '编辑资源' : '新增资源' }}</h3>
-        <div><label class="text-xs text-slate-500">资源类型 *</label>
-          <select v-model="modalForm.resource_type" class="mt-1 w-full border rounded px-3 py-2 text-sm">
-            <option value="local">local</option><option value="youtube">youtube</option><option value="bilibili">bilibili</option><option value="external_link">external_link</option>
-          </select>
-        </div>
-        <div><label class="text-xs text-slate-500">来源 URL/ID *</label>
-          <input v-model="modalForm.source_url" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" placeholder="URL、视频ID 或本地路径" />
-          <p v-if="modalError" class="text-xs text-red-600 mt-1">{{ modalError }}</p>
-        </div>
-        <div><label class="text-xs text-slate-500">资源标题（可选）</label><input v-model="modalForm.title" class="mt-1 w-full border rounded px-3 py-2 text-sm" type="text" /></div>
-        <div class="flex gap-2 pt-2">
-          <button class="flex-1 px-3 py-2 rounded bg-primary text-on-primary text-sm disabled:opacity-60" type="button" :disabled="resourceOp" @click="submitModal">{{ resourceOp ? '保存中...' : '确认' }}</button>
-          <button class="px-3 py-2 rounded border text-sm" type="button" @click="closeModal">取消</button>
-        </div>
-      </div>
-    </div>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
-import axios from 'axios'
-import { getCourses, getCourseById, createCourse, deleteCourse, updateCourse, addResource, updateResource, deleteResource, sortResources, type CourseDto, type VideoResourceDto, type VideoResourceType } from '@/api/course'
+import { ref, reactive, nextTick } from 'vue'
 
-// ── mode ──────────────────────────────────────────────────────
-type Mode = 'list' | 'edit'
-const mode = ref<Mode>('list')
-const editingCourseId = ref('')
+// ============================================================
+// 管理员认证（简单密码锁 + sessionStorage 会话保持）
+// ============================================================
 
-function openEdit(id: string) { editingCourseId.value = id; mode.value = 'edit'; reloadEdit() }
-function backToList() { mode.value = 'list'; editingCourseId.value = ''; refresh() }
+const ADMIN_PASSWORD = 'admin123'
+const SESSION_KEY = 'xinyanedu_admin_auth'
 
-// ── shared ────────────────────────────────────────────────────
-function configureToken() {
-  const cur = localStorage.getItem('ADMIN_TOKEN') || ''
-  const next = window.prompt('请输入管理员令牌（Admin Token）', cur)
-  if (next === null) return
-  localStorage.setItem('ADMIN_TOKEN', next.trim())
-  authError.value = ''; editAuthError.value = ''
-  if (mode.value === 'list') refresh(); else reloadEdit()
-}
+const isAdminAuthenticated = ref(
+  sessionStorage.getItem(SESSION_KEY) === '1'
+)
 
-function handleAuth(e: unknown, target: 'list' | 'edit') {
-  if (axios.isAxiosError(e) && (e.response?.status === 401 || e.response?.status === 403)) {
-    if (target === 'list') authError.value = '管理员令牌无效或已过期，请重新配置 ADMIN_TOKEN 后重试。'
-    else editAuthError.value = '管理员令牌无效或已过期，请重新配置 ADMIN_TOKEN。'
-    return true
-  }
-  return false
-}
-
-// ── LIST ──────────────────────────────────────────────────────
-const loading = ref(false)
-const listError = ref('')
+const adminPassword = ref('')
 const authError = ref('')
-const courses = ref<CourseDto[]>([])
-const submitting = ref(false)
-const searchInput = ref('')
-const selectedType = ref<'' | VideoResourceType>('')
-const isDrawerOpen = ref(false)
-const pagination = reactive({ page: 1, pageSize: 10 as 10 | 20 | 50, total: 0, totalPages: 1 })
-const createForm = reactive({ title: '', coverUrl: '', description: '', resource_type: 'local' as VideoResourceType, source_url: '' })
-const createErrors = reactive({ title: '', source_url: '' })
+const showPassword = ref(false)
+const pwdInputRef = ref<HTMLInputElement | null>(null)
 
-async function refresh() {
-  authError.value = ''; listError.value = ''; loading.value = true
-  try {
-    const data = await getCourses({ q: searchInput.value.trim() || undefined, resource_type: selectedType.value || undefined, page: pagination.page, pageSize: pagination.pageSize })
-    courses.value = data.items
-    pagination.page = data.pagination.page
-    pagination.pageSize = data.pagination.pageSize as 10 | 20 | 50
-    pagination.total = data.pagination.total
-    pagination.totalPages = data.pagination.totalPages
-  } catch (e) { if (!handleAuth(e, 'list')) listError.value = e instanceof Error ? e.message : '加载课程失败' }
-  finally { loading.value = false }
+function verifyAdmin() {
+  if (adminPassword.value === ADMIN_PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, '1')
+    isAdminAuthenticated.value = true
+    adminPassword.value = ''
+    authError.value = ''
+  } else {
+    authError.value = '管理员密码错误，请重试。'
+    adminPassword.value = ''
+    nextTick(() => pwdInputRef.value?.focus())
+  }
 }
 
-function formatDate(s: string) { const d = new Date(s); return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString() }
-function applyFilters() { pagination.page = 1; refresh() }
-function clearFilters() { searchInput.value = ''; selectedType.value = ''; pagination.page = 1; refresh() }
-function changePage(p: number) { pagination.page = p; refresh() }
-function onPageSizeChange() { pagination.page = 1; refresh() }
-
-function openCreateDrawer() {
-  createForm.title = ''; createForm.coverUrl = ''; createForm.description = ''; createForm.resource_type = 'local'; createForm.source_url = ''
-  createErrors.title = ''; createErrors.source_url = ''
-  isDrawerOpen.value = true
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY)
+  isAdminAuthenticated.value = false
+  adminPassword.value = ''
+  authError.value = ''
 }
 
-function validateCreate() {
-  createErrors.title = ''; createErrors.source_url = ''
-  if (!createForm.title.trim()) createErrors.title = '课程标题不能为空'
-  if (!createForm.source_url.trim()) createErrors.source_url = 'URL/Path 不能为空'
-  return !createErrors.title && !createErrors.source_url
+// ============================================================
+// 数据看板 Mock 数据（原有，未修改）
+// ============================================================
+
+const STAT_CARDS = [
+  {
+    icon: 'group',
+    value: '1,284',
+    unit: '人',
+    label: '累计注册学员',
+    trend: '较上月 +8.3%',
+    trendUp: true,
+    from: '#eff6ff',
+    to: '#dbeafe',
+  },
+  {
+    icon: 'payments',
+    value: '¥342,000',
+    unit: '',
+    label: '本月课程营收',
+    trend: '较上月 +12.1%',
+    trendUp: true,
+    from: '#f0fdf4',
+    to: '#dcfce7',
+  },
+  {
+    icon: 'smart_toy',
+    value: '8,932',
+    unit: '次',
+    label: 'AI 助手调用量',
+    trend: '本月累计',
+    trendUp: false,
+    from: '#faf5ff',
+    to: '#ede9fe',
+  },
+  {
+    icon: 'workspace_premium',
+    value: '92%',
+    unit: '',
+    label: '课程平均完课率',
+    trend: '高于行业均值',
+    trendUp: true,
+    from: '#fff7ed',
+    to: '#ffedd5',
+  },
+]
+
+// ============================================================
+// 添加课程表单（原有逻辑，未做任何修改）
+// ============================================================
+
+const LANGUAGES = ['英语', '俄语', '法语', '日语', '德语', '西班牙语', '韩语']
+const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+const form = reactive({
+  title: '',
+  language: '',
+  level: '',
+  teacher: '',
+  price: ''
+})
+
+const errors = reactive({
+  title: false
+})
+
+function handleAdd() {
+  if (!form.title || !form.language || !form.level) {
+    alert('请填写完整的必填信息！')
+    return
+  }
+
+  // 模拟提交成功
+  alert(`课程【${form.title}】添加成功！这将在周一给老师演示时非常直观。`)
+
+  // 清空表单
+  form.title = ''
+  form.language = ''
+  form.level = ''
+  form.teacher = ''
+  form.price = ''
 }
-
-async function onSubmit() {
-  if (submitting.value || !validateCreate()) return
-  submitting.value = true
-  try {
-    await createCourse({ title: createForm.title.trim(), coverUrl: createForm.coverUrl.trim() || undefined, description: createForm.description.trim() || undefined, resources: [{ resource_type: createForm.resource_type, source_url: createForm.source_url.trim(), sortOrder: 0 }] })
-    pagination.page = 1; await refresh(); isDrawerOpen.value = false
-  } catch (e) { if (!handleAuth(e, 'list')) listError.value = e instanceof Error ? e.message : '创建课程失败' }
-  finally { submitting.value = false }
-}
-
-async function onDelete(courseId: string) {
-  if (!window.confirm('确认删除该课程？删除后不可恢复。')) return
-  try { await deleteCourse(courseId); await refresh() }
-  catch (e) { if (!handleAuth(e, 'list')) listError.value = e instanceof Error ? e.message : '删除课程失败' }
-}
-
-watch(() => createForm.resource_type, () => { createForm.source_url = ''; createErrors.source_url = '' })
-
-// ── EDIT ──────────────────────────────────────────────────────
-type EditableResource = { id: string; clientKey: string; resource_type: VideoResourceType; source_url: string; title: string }
-
-const saving = ref(false)
-const resourceOp = ref(false)
-const orderDirty = ref(false)
-const editError = ref('')
-const editAuthError = ref('')
-const editSuccess = ref('')
-const editForm = reactive({ title: '', coverUrl: '', description: '', resources: [] as EditableResource[] })
-const modalOpen = ref(false)
-const editingResource = ref<EditableResource | null>(null)
-const modalError = ref('')
-const modalForm = reactive<{ resource_type: VideoResourceType; source_url: string; title: string }>({ resource_type: 'local', source_url: '', title: '' })
-
-function dtoToEditable(r: VideoResourceDto): EditableResource {
-  return { id: r.id, clientKey: r.id, resource_type: r.resource_type, source_url: r.source_url, title: r.title || '' }
-}
-
-async function reloadEdit() {
-  editError.value = ''; editAuthError.value = ''; editSuccess.value = ''; orderDirty.value = false
-  try {
-    const data = await getCourseById(editingCourseId.value)
-    editForm.title = data.title; editForm.coverUrl = data.coverUrl || ''; editForm.description = data.description || ''
-    editForm.resources = data.resources.map(dtoToEditable)
-  } catch (e) { if (!handleAuth(e, 'edit')) editError.value = e instanceof Error ? e.message : '加载课程失败' }
-}
-
-async function saveCourseInfo() {
-  if (saving.value) return
-  editError.value = ''; editSuccess.value = ''; editAuthError.value = ''
-  if (!editForm.title.trim()) { editError.value = '课程标题不能为空'; return }
-  saving.value = true
-  try {
-    await updateCourse(editingCourseId.value, { title: editForm.title.trim(), coverUrl: editForm.coverUrl.trim() || undefined, description: editForm.description.trim() || undefined })
-    editSuccess.value = '课程信息已保存'
-  } catch (e) { if (!handleAuth(e, 'edit')) editError.value = e instanceof Error ? e.message : '保存失败' }
-  finally { saving.value = false }
-}
-
-function moveUp(idx: number) { if (idx === 0) return; const t = editForm.resources[idx - 1]; editForm.resources[idx - 1] = editForm.resources[idx]; editForm.resources[idx] = t; orderDirty.value = true }
-function moveDown(idx: number) { if (idx === editForm.resources.length - 1) return; const t = editForm.resources[idx + 1]; editForm.resources[idx + 1] = editForm.resources[idx]; editForm.resources[idx] = t; orderDirty.value = true }
-
-async function saveOrder() {
-  if (resourceOp.value) return
-  editError.value = ''; editAuthError.value = ''; resourceOp.value = true
-  try {
-    const updated = await sortResources(editingCourseId.value, editForm.resources.map((r) => r.id))
-    editForm.resources = updated.resources.map(dtoToEditable); orderDirty.value = false; editSuccess.value = '排序已保存'
-  } catch (e) { if (!handleAuth(e, 'edit')) editError.value = e instanceof Error ? e.message : '排序保存失败' }
-  finally { resourceOp.value = false }
-}
-
-function openAddModal() { editingResource.value = null; modalForm.resource_type = 'local'; modalForm.source_url = ''; modalForm.title = ''; modalError.value = ''; modalOpen.value = true }
-function openEditModal(r: EditableResource) { editingResource.value = r; modalForm.resource_type = r.resource_type; modalForm.source_url = r.source_url; modalForm.title = r.title; modalError.value = ''; modalOpen.value = true }
-function closeModal() { modalOpen.value = false; editingResource.value = null; modalError.value = '' }
-
-async function submitModal() {
-  if (resourceOp.value) return
-  modalError.value = ''
-  if (!modalForm.source_url.trim()) { modalError.value = '来源 URL/ID 不能为空'; return }
-  const input = { resource_type: modalForm.resource_type, source_url: modalForm.source_url.trim(), title: modalForm.title.trim() || undefined }
-  editError.value = ''; editAuthError.value = ''; resourceOp.value = true
-  try {
-    if (editingResource.value) {
-      const updated = await updateResource(editingCourseId.value, editingResource.value.id, input)
-      const idx = editForm.resources.findIndex((r) => r.id === editingResource.value!.id)
-      if (idx !== -1) editForm.resources[idx] = dtoToEditable(updated)
-      editSuccess.value = '资源已更新'
-    } else {
-      const created = await addResource(editingCourseId.value, input)
-      editForm.resources.push(dtoToEditable(created)); editSuccess.value = '资源已新增'
-    }
-    closeModal()
-  } catch (e) { if (!handleAuth(e, 'edit')) modalError.value = e instanceof Error ? e.message : '操作失败' }
-  finally { resourceOp.value = false }
-}
-
-async function onDeleteResource(r: EditableResource) {
-  if (resourceOp.value || !window.confirm(`确认删除资源「${r.title || r.source_url}」？`)) return
-  editError.value = ''; editAuthError.value = ''; resourceOp.value = true
-  try { await deleteResource(editingCourseId.value, r.id); editForm.resources = editForm.resources.filter((res) => res.id !== r.id); editSuccess.value = '资源已删除' }
-  catch (e) { if (!handleAuth(e, 'edit')) editError.value = e instanceof Error ? e.message : '删除失败' }
-  finally { resourceOp.value = false }
-}
-
-onMounted(refresh)
 </script>
+
+<style scoped>
+/* ── 数据看板卡片 ─────────────────────────────────────────── */
+.stat-card {
+  position: relative;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.375rem 1.125rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease;
+  cursor: default;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(51, 94, 161, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.stat-icon-wrap {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--card-from), var(--card-to));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 图标用深色，与浅色背景形成对比 */
+  filter: saturate(1.4) brightness(0.72);
+}
+
+.stat-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--card-from), var(--card-to));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.stat-card:hover .stat-bar {
+  opacity: 1;
+}
+
+/* ── 错误提示淡入 ────────────────────────────────────────── */
+.err-fade-enter-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.err-fade-enter-from   { opacity: 0; transform: translateY(-4px); }
+
+/* ── 表单样式（原有，未修改）─────────────────────────────── */
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+</style>

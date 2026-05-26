@@ -1,183 +1,268 @@
 <template>
-  <main class="pt-24">
-    <!-- Hero Section -->
-    <section class="max-w-7xl mx-auto px-8 pt-24 pb-16 flex flex-col md:flex-row items-center gap-12">
-      <div class="flex-1 space-y-8">
-        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tighter leading-tight text-on-surface">
-          打破教育壁垒，<br/>
-          <span class="text-primary">知识连接你我</span>
-        </h1>
-        <p class="text-xl text-on-surface-variant max-w-lg leading-relaxed">
-          聚合全网优质免费公开课，AI 伴学，随时随地开启学习之旅。
+  <div class="min-h-screen" style="background: #f5f7fa;">
+
+    <section
+      class="relative overflow-hidden text-white"
+      style="background: linear-gradient(135deg, #0f2557 0%, #1a3a7a 40%, #1e4fa0 70%, #2563c4 100%);"
+    >
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-10"
+          style="background: radial-gradient(circle, #60a5fa 0%, transparent 70%);"
+        />
+        <div class="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-10"
+          style="background: radial-gradient(circle, #818cf8 0%, transparent 70%);"
+        />
+        <div class="absolute inset-0 opacity-[0.04]"
+          style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 40px 40px;"
+        />
+      </div>
+
+      <div class="relative max-w-6xl mx-auto px-6 py-24 lg:py-32">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+
+          <div class="flex-1 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold mb-8"
+              style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);">
+              <span class="material-symbols-outlined text-base text-yellow-300" aria-hidden="true">auto_awesome</span>
+              <span class="text-blue-100">{{ $t('home.badge') }}</span>
+            </div>
+
+            <h1 class="text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
+              <span class="block text-white">{{ $t('home.title') }}</span>
+              <span class="block text-transparent bg-clip-text"
+                style="background: linear-gradient(90deg, #fde68a 0%, #fb923c 100%);">
+                OpenEdu
+              </span>
+            </h1>
+            <p class="text-xl text-blue-100 font-light leading-relaxed mb-4 max-w-lg mx-auto lg:mx-0">
+              {{ $t('home.sub') }}
+            </p>
+            <p class="text-blue-200/70 text-sm leading-relaxed mb-10 max-w-md mx-auto lg:mx-0">
+              {{ $t('home.desc') }}
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start">
+              <router-link
+                to="/courses"
+                class="flex items-center gap-2 px-7 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 shadow-lg"
+                style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: white; box-shadow: 0 8px 24px rgba(249,115,22,0.35);"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">menu_book</span>
+                <span>{{ $t('home.btnCourses') }}</span>
+              </router-link>
+              <router-link
+                to="/dashboard"
+                class="flex items-center gap-2 px-7 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200"
+                style="background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); color: white;"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">smart_toy</span>
+                <span>{{ $t('home.btnDashboard') }}</span>
+              </router-link>
+            </div>
+          </div>
+
+          <div class="hidden lg:grid grid-cols-2 gap-4 shrink-0 w-80">
+            <div
+              v-for="stat in STATS"
+              :key="stat.label"
+              class="rounded-2xl p-5 flex flex-col gap-2"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(12px);"
+            >
+              <span class="material-symbols-outlined text-2xl" :style="{ color: stat.color }" aria-hidden="true">{{ stat.icon }}</span>
+              <p class="text-2xl font-black text-white">{{ stat.value }}</p>
+              <p class="text-xs text-blue-200/70 font-medium">{{ stat.label }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="absolute bottom-0 left-0 right-0 h-12 overflow-hidden">
+        <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full" preserveAspectRatio="none">
+          <path d="M0 48L60 42.7C120 37.3 240 26.7 360 21.3C480 16 600 16 720 21.3C840 26.7 960 37.3 1080 40C1200 42.7 1320 37.3 1380 34.7L1440 32V48H1380C1320 48 1200 48 1080 48C960 48 840 48 720 48C600 48 480 48 360 48C240 48 120 48 60 48H0Z" fill="#f5f7fa"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-extrabold text-on-surface font-headline tracking-tight mb-3">
+          {{ $t('home.journeyTitle') }}
+        </h2>
+        <p class="text-on-surface-variant text-sm max-w-md mx-auto">
+          {{ $t('home.journeySub') }}
         </p>
-        <div class="relative group max-w-2xl">
-          <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <span class="material-symbols-outlined text-outline">search</span>
-          </div>
-          <input class="w-full pl-14 pr-6 py-5 bg-surface-container-lowest rounded-2xl shadow-sm border-none ring-1 ring-on-surface/5 focus:ring-2 focus:ring-primary transition-all text-lg placeholder:text-outline-variant" placeholder="输入你想学的技能，如 Python、微积分..." type="text"/>
-          <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-medium hover:bg-primary-dim transition-colors">
-            搜索
-          </button>
-        </div>
       </div>
-      <div class="flex-1 w-full max-w-lg">
-        <div class="relative rounded-3xl overflow-hidden bg-surface-container-low p-1">
-          <img alt="Education Concept" class="rounded-[1.4rem] w-full aspect-square object-cover mix-blend-multiply opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvvwPUqGt7CV_le8YwY6WGcVUZiUMkg97h9NjU6VKFCjoAP6CjN9XHNF39VmzWyouAID73YfjllvtY-yK-FSyASvKnC6lQD5BOC02LEBxk5jhBpGel_0jb7PKavUHRVPlrEd0gEtvo0QgV0XUyqtRHOnXsw7AWd-Xw6p6z7knSumJbso2vZnY8UVP6fq-HELdo6LjgqLhc7I94NSwTLxs_aIfoJVZQ163C9w72rhet_AcPhA5vRqh7W-1NECVKpp1Eq35zJPdLH1I"/>
-          <div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent pointer-events-none"></div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Resource Aggregation (Features) -->
-    <section class="bg-surface-container-low py-24">
-      <div class="max-w-7xl mx-auto px-8">
-        <h2 class="text-3xl font-bold tracking-tight mb-12 text-center text-on-surface">我们为你聚合了...</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- Feature Card 1 -->
-          <div class="bg-surface-container-lowest p-8 rounded-3xl group hover:shadow-lg transition-all duration-300">
-            <div class="w-14 h-14 bg-primary-container rounded-2xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform">
-              <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
-            </div>
-            <h3 class="text-xl font-bold mb-3">本地精品</h3>
-            <p class="text-on-surface-variant leading-relaxed">由 OpenEdu 精心制作的结构化进阶课程，完全免费且无广告。</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <router-link
+          v-for="card in QUICK_CARDS"
+          :key="card.title"
+          :to="card.to"
+          class="entry-card group"
+        >
+          <div
+            class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+            :style="{ background: card.iconBg }"
+          >
+            <span class="material-symbols-outlined text-2xl text-white" aria-hidden="true">{{ card.icon }}</span>
           </div>
-          <!-- Feature Card 2 -->
-          <div class="bg-surface-container-lowest p-8 rounded-3xl group hover:shadow-lg transition-all duration-300">
-            <div class="w-14 h-14 bg-tertiary-container rounded-2xl flex items-center justify-center mb-6 text-tertiary group-hover:scale-110 transition-transform">
-              <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">language</span>
-            </div>
-            <h3 class="text-xl font-bold mb-3">YouTube EDU</h3>
-            <p class="text-on-surface-variant leading-relaxed">同步全球顶尖学术资源，涵盖科学、工程及人文社科领域。</p>
+          <h3 class="text-lg font-bold text-on-surface font-headline mb-2 group-hover:text-primary transition-colors">
+            {{ card.title }}
+          </h3>
+          <p class="text-sm text-on-surface-variant leading-relaxed flex-1">
+            {{ card.desc }}
+          </p>
+          <div class="mt-5 flex items-center gap-1.5 text-primary text-sm font-bold">
+            <span>{{ card.cta }}</span>
+            <span class="material-symbols-outlined text-base transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
           </div>
-          <!-- Feature Card 3 -->
-          <div class="bg-surface-container-lowest p-8 rounded-3xl group hover:shadow-lg transition-all duration-300">
-            <div class="w-14 h-14 bg-secondary-container rounded-2xl flex items-center justify-center mb-6 text-secondary group-hover:scale-110 transition-transform">
-              <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">play_circle</span>
-            </div>
-            <h3 class="text-xl font-bold mb-3">MOOC/B站</h3>
-            <p class="text-on-surface-variant leading-relaxed">整合国内各大高校与优质创作者资源，打造零门槛学习社区。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Recommended Courses Grid -->
-    <section class="py-24 max-w-7xl mx-auto px-8">
-      <div class="flex justify-between items-end mb-12">
-        <div>
-          <h2 class="text-3xl font-bold tracking-tight text-on-surface">今日推荐免费资源</h2>
-          <p class="text-on-surface-variant mt-2">基于全网学习热度为您实时更新</p>
-        </div>
-        <router-link to="/courses" class="text-primary font-semibold hover:underline flex items-center gap-1">
-          查看全部 <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </router-link>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <!-- Course Card 1 -->
-        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="aspect-video relative overflow-hidden">
-            <img alt="Python Course" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBdy5-4n0u11_mursGb922jSM6IgHBbjMYLybogs3Qflrut6DuNxGXMrmbh9KTBZUIGeWoNj_jIG1fja_r5B3IR-njrQgLWDgiASxNghWKtU5E47GtCuSG4TQQhk4bC3VPm-rR5cm9SmFj7md2uS-OrIlDe_hzFpBZOo5esADpiFOmmD_r3Tl-vGWTVFDlqlhDA_Ufsi7tCg-ZZDMyF39UKbdmuuvISw8mV6jCKCY6tyfLdx-j5kSeSRjLVguGHvADqi2dYTYGxg0"/>
-            <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">YouTube</span>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-extrabold text-on-surface font-headline tracking-tight mb-2">
+          {{ $t('home.langsTitle') }}
+        </h2>
+        <p class="text-on-surface-variant text-sm">{{ $t('home.langsSub') }}</p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-3">
+        <router-link
+          v-for="lang in LANGUAGES"
+          :key="lang.name"
+          :to="`/courses?language=${lang.name}`"
+          class="lang-chip group"
+        >
+          <span class="text-2xl" aria-hidden="true">{{ lang.emoji }}</span>
+          <div class="text-left">
+            <p class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{{ lang.name }}</p>
+            <p class="text-[11px] text-on-surface-variant">{{ lang.sub }}</p>
           </div>
-          <div class="p-5">
-            <h3 class="font-bold text-on-surface mb-4 line-clamp-2">Python 全栈开发：从基础到商业项目实战</h3>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5 text-on-surface-variant text-sm">
-                <span class="material-symbols-outlined text-base">visibility</span>
-                <span>12.5k</span>
-              </div>
-              <button class="text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">bookmark</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- Course Card 2 -->
-        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="aspect-video relative overflow-hidden">
-            <img alt="Math Course" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2CJe-fBI6hwU42UNs0f3y1c2PiwpNrCkwmUijHIyTNdgdcq109mY_0t5y9iKRGKjB0MQrzfa1b4DXdtgRSEEHkZ4BG07epf9JaLTkwwRuBFabSy92M39vjolXHIRp4MDGx-TGXnS_SMTWeXN8YUW5zS4-ZCGQHwMHuWLJRRpeirVCTSyk9dI0SrIpkByEqfWhXIQqlWvIv-sfKVqn4QMQRnnDuoaW4_-WLfK8tD0Gp2tEnaqSsz6a6radKFQ1cAxQxSz4Oxzqctk"/>
-            <span class="absolute top-3 left-3 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Bilibili</span>
-          </div>
-          <div class="p-5">
-            <h3 class="font-bold text-on-surface mb-4 line-clamp-2">微积分本质：用直觉理解深奥的数学理论</h3>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5 text-on-surface-variant text-sm">
-                <span class="material-symbols-outlined text-base">visibility</span>
-                <span>45k</span>
-              </div>
-              <button class="text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">bookmark</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- Course Card 3 -->
-        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="aspect-video relative overflow-hidden">
-            <img alt="CS Course" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCEW7rqXQRPXqC3e-ge6c614Ak5ZRO0FjKTOXNDxi8GmIrXUPF1zAF9qSZS-DjABOsf0i-dN4M51Cqrm8ORxD1mgU1hinXrtZzJMFOEghSlJ_RvatF8jNrS2rAIMJtFrQyTb5Iq-uFCCE8bHhqLrLK4R_gVyAV9DslVvdp3dWIobV0yAjSgEiXBlS6Pc45NuEGJ-IZXaatNelhSwnTxwEm8-sBPC4HevJyrlVxnXgsiz2ZjztY5dZKmr5A4lo89ZTLL3ojeSFwX64"/>
-            <span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Local</span>
-          </div>
-          <div class="p-5">
-            <h3 class="font-bold text-on-surface mb-4 line-clamp-2">计算机科学导论：哈佛大学 CS50 官方中文版</h3>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5 text-on-surface-variant text-sm">
-                <span class="material-symbols-outlined text-base">visibility</span>
-                <span>8.9k</span>
-              </div>
-              <button class="text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">bookmark</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- Course Card 4 -->
-        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="aspect-video relative overflow-hidden">
-            <img alt="Design Course" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq1EPYTOq4nhFH2BDVpQUTpe4uM4icRpM_CzoPdb0LtpnROLuXn1Iv3k0d1hXJFnN06sywfeTjUDD6An5-4zvPctDwKlPL6Ln7P1ae8VYDy1m0RsL2GQBR64d-YLGf3Y6dJ7huvQMxaScuVGzUv4npz3aXEw47aVlge8zL19gUgDfNrjunSjHQiSzf0TLKhJ3sX5uUcm1olWaJQPOjYEPLcV6udcipcBXoaK79eYCXfXTiRYTp_7i1wnuq1nW-IT8D-AQfGFdaBGo"/>
-            <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">YouTube</span>
-          </div>
-          <div class="p-5">
-            <h3 class="font-bold text-on-surface mb-4 line-clamp-2">UI 设计进阶：从色彩理论到现代网格系统</h3>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5 text-on-surface-variant text-sm">
-                <span class="material-symbols-outlined text-base">visibility</span>
-                <span>21k</span>
-              </div>
-              <button class="text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">bookmark</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        </router-link>
       </div>
     </section>
 
-    <!-- AI Companion Banner -->
-    <section class="max-w-7xl mx-auto px-8 mb-24">
-      <div class="bg-primary text-on-primary rounded-[2.5rem] p-12 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-primary-dim to-transparent opacity-50"></div>
-        <div class="relative z-10 max-w-2xl">
-          <div class="inline-flex items-center gap-2 bg-on-primary/10 px-4 py-1.5 rounded-full mb-6">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
-            <span class="text-xs font-bold uppercase tracking-widest">Powered by AI</span>
-          </div>
-          <h2 class="text-3xl md:text-4xl font-bold mb-6 leading-tight">不仅是课程，更是你的专属 AI 助教。</h2>
-          <p class="text-primary-fixed text-lg leading-relaxed mb-8">
-            在学习中遇到难题？随时向 AI 发问。我们的 AI 助教已针对每门课程的知识点进行深度学习，为你提供即时的专业解答。
+    <section class="mx-6 mb-16 rounded-3xl overflow-hidden"
+      style="background: linear-gradient(135deg, #1e3a6e 0%, #1a3a7a 50%, #0f2557 100%);">
+      <div class="max-w-5xl mx-auto px-8 py-12 flex flex-col lg:flex-row items-center gap-10">
+        <div
+          class="w-20 h-20 rounded-2xl flex items-center justify-center shrink-0"
+          style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);"
+        >
+          <span class="material-symbols-outlined text-4xl text-yellow-300" style="font-variation-settings:'FILL' 1;" aria-hidden="true">smart_toy</span>
+        </div>
+        <div class="flex-1 text-center lg:text-left">
+          <p class="text-yellow-300 text-xs font-bold uppercase tracking-widest mb-2">{{ $t('home.bannerBadge') }}</p>
+          <h2 class="text-2xl font-extrabold text-white mb-3">{{ $t('home.bannerTitle') }}</h2>
+          <p class="text-blue-200/80 text-sm leading-relaxed max-w-xl">
+            {{ $t('home.bannerDesc') }}
           </p>
-          <button class="bg-surface-container-lowest text-primary px-10 py-4 rounded-xl font-bold hover:bg-surface-bright transition-all shadow-xl hover:-translate-y-1 active:scale-95">
-            Try AI Companion
-          </button>
         </div>
-        <div class="relative z-10 hidden lg:block">
-          <div class="w-64 h-64 bg-surface-container-lowest/10 backdrop-blur-xl rounded-full flex items-center justify-center p-8 ring-1 ring-on-primary/20 shadow-inner">
-            <span class="material-symbols-outlined text-8xl opacity-80" style="font-variation-settings: 'FILL' 0, 'wght' 200;">smart_toy</span>
-          </div>
-        </div>
+        <router-link
+          to="/dashboard"
+          class="shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-white transition-all duration-200"
+          style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); box-shadow: 0 4px 16px rgba(249,115,22,0.4);"
+        >
+          <span class="material-symbols-outlined text-base" aria-hidden="true">dashboard</span>
+          {{ $t('home.bannerBtn') }}
+        </router-link>
       </div>
     </section>
-  </main>
+
+  </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+// 这里的数组转成了 computed，这样每次切换语言时，数组里的 t() 函数都会重新执行并更新内容
+const STATS = computed(() => [
+  { icon: 'menu_book', value: '20+', label: t('home.stat1'), color: '#fbbf24' },
+  { icon: 'language', value: '7', label: t('home.stat2'), color: '#60a5fa' },
+  { icon: 'group', value: '500+', label: t('home.stat3'), color: '#34d399' },
+  { icon: 'smart_toy', value: 'AI', label: t('home.stat4'), color: '#a78bfa' },
+])
+
+const QUICK_CARDS = computed(() => [
+  {
+    to: '/dashboard',
+    icon: 'smart_toy',
+    iconBg: 'linear-gradient(135deg, #335ea1 0%, #4f7fd4 100%)',
+    title: t('home.card1Title'),
+    desc: t('home.card1Desc'),
+    cta: t('home.card1Btn'),
+  },
+  {
+    to: '/courses',
+    icon: 'menu_book',
+    iconBg: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+    title: t('home.card2Title'),
+    desc: t('home.card2Desc'),
+    cta: t('home.card2Btn'),
+  },
+  {
+    to: '/dashboard',
+    icon: 'calendar_month',
+    iconBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    title: t('home.card3Title'),
+    desc: t('home.card3Desc'),
+    cta: t('home.card3Btn'),
+  },
+])
+
+const LANGUAGES = computed(() => [
+  { name: t('home.langEn'), emoji: '🇬🇧', sub: t('home.langEnSub') },
+  { name: t('home.langRu'), emoji: '🇷🇺', sub: t('home.langRuSub') },
+  { name: t('home.langFr'), emoji: '🇫🇷', sub: t('home.langFrSub') },
+  { name: t('home.langJa'), emoji: '🇯🇵', sub: t('home.langJaSub') },
+  { name: t('home.langDe'), emoji: '🇩🇪', sub: t('home.langDeSub') },
+  { name: t('home.langEs'), emoji: '🇪🇸', sub: t('home.langEsSub') },
+  { name: t('home.langKo'), emoji: '🇰🇷', sub: t('home.langKoSub') },
+])
 </script>
+
+<style scoped>
+/* 快速入口卡片 */
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  border: 1px solid rgba(171, 179, 183, 0.12);
+}
+
+.entry-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 28px rgba(51, 94, 161, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 语种 chip */
+.lang-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: white;
+  border-radius: 1rem;
+  text-decoration: none;
+  border: 1px solid rgba(171, 179, 183, 0.15);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.lang-chip:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(51, 94, 161, 0.1);
+  border-color: rgba(51, 94, 161, 0.2);
+}
+</style>

@@ -68,12 +68,12 @@
                 ? 'text-green-500 cursor-default'
                 : 'text-slate-400 hover:text-primary hover:bg-primary/5'"
               :disabled="extractingIdx === idx || m.isFlashcardGenerated"
-              @click="!m.isFlashcardGenerated && startExtract(idx)"
+              @click="!m.isFlashcardGenerated && handleGenerateCard(idx)"
             >
               <span class="material-symbols-outlined text-sm">
-                {{ m.isFlashcardGenerated ? 'check_circle' : extractingIdx === idx ? 'hourglass_empty' : 'style' }}
+                {{ m.isFlashcardGenerated ? 'check_circle' : extractingIdx === idx ? 'hourglass_empty' : 'auto_awesome' }}
               </span>
-              {{ m.isFlashcardGenerated ? '已生成卡片' : extractingIdx === idx ? '提取中…' : '生成知识卡片' }}
+              {{ m.isFlashcardGenerated ? '已生成卡片' : extractingIdx === idx ? '提取中…' : '生成卡片' }}
             </button>
           </div>
         </div>
@@ -103,65 +103,6 @@
       </div>
       <p class="text-[10px] text-slate-400 mt-1.5 text-center">Enter 发送 · Shift+Enter 换行</p>
     </div>
-
-    <!-- Flashcard confirm modal -->
-    <Transition name="fade">
-      <div v-if="cardDraft" class="absolute inset-0 bg-black/40 flex items-center justify-center z-50 p-4" @click.self="cardDraft = null">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
-          <h3 class="font-headline font-bold text-base text-on-surface flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">style</span>
-            确认知识卡片
-          </h3>
-
-          <div class="space-y-3">
-            <div>
-              <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">词条</label>
-              <input
-                v-model="cardDraft.term"
-                class="mt-1 w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div>
-              <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">解释</label>
-              <textarea
-                v-model="cardDraft.definition"
-                rows="3"
-                class="mt-1 w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              />
-            </div>
-            <div>
-              <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">例句 / 用法（可选）</label>
-              <textarea
-                v-model="cardDraft.example"
-                rows="2"
-                class="mt-1 w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              />
-            </div>
-          </div>
-
-          <div class="flex gap-2 pt-1">
-            <button
-              class="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              @click="cardDraft = null"
-            >取消</button>
-            <button
-              class="flex-1 py-2 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-              :disabled="savingCard"
-              @click="saveCard"
-            >
-              {{ savingCard ? '保存中…' : '加入复习大厅' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Toast -->
-    <Transition name="slide-up">
-      <div v-if="toast" class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
-        {{ toast }}
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -169,8 +110,12 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { ElMessage } from 'element-plus'
 import { streamChat, type ChatMessage as ApiChatMessage } from '@/api/chat'
-import { createFlashcard } from '@/api/flashcard'
+import { createFlashcard, extractFlashcardContent } from '@/api/flashcard'
+import { useStudentAuth } from '@/composables/useStudentAuth'
+
+const { studentId } = useStudentAuth()
 
 const props = defineProps<{
   courseId: string
@@ -205,78 +150,41 @@ const containerRef = ref<HTMLDivElement | null>(null)
 
 // --- Flashcard state ---
 const extractingIdx = ref<number | null>(null)
-const pendingCardIdx = ref<number | null>(null)
-const cardDraft = ref<{ term: string; definition: string; example: string } | null>(null)
-const savingCard = ref(false)
-const toast = ref('')
-let toastTimer: ReturnType<typeof setTimeout> | null = null
 
-function showToast(msg: string) {
-  toast.value = msg
-  if (toastTimer) clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { toast.value = '' }, 2500)
-}
-
-/** 用 AI 从回复中提取 term/definition/example，返回 JSON */
-async function startExtract(idx: number) {
-  extractingIdx.value = idx
-  pendingCardIdx.value = idx
-  const content = messages.value[idx].content
-  const prompt = `请从以下内容中提取最核心的一个知识点，严格以 JSON 格式返回，只返回 JSON，不要任何其他文字或代码块包裹。
-
-JSON 字段要求：
-- term: 核心词汇或概念名称
-- definition: 包含拼读/音标（如适用）、词性，以及详细易懂的中文解释（50-150字）
-- example: 该词汇/概念的经典例句，必须附带中文翻译，格式为"英文例句 / 中文翻译"
-
-内容：
-${content}`
-
+async function generateFlashcard(content: string): Promise<{ term: string; definition: string; example: string } | null> {
   try {
-    let raw = ''
-    await streamChat(
-      [{ role: 'user', content: prompt }],
-      { courseName: props.courseName ?? '', videoId: props.videoId ?? '', currentTimestamp: 0, platform: '' },
-      (chunk) => { raw += chunk },
-    )
-    // 提取 JSON 块
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('no json')
-    const parsed = JSON.parse(match[0]) as { term?: string; definition?: string; example?: string }
-    cardDraft.value = {
-      term: parsed.term ?? '',
-      definition: parsed.definition ?? '',
-      example: parsed.example ?? '',
-    }
+    return await extractFlashcardContent(content)
   } catch {
-    showToast('提取失败，请重试')
-  } finally {
-    extractingIdx.value = null
+    return null
   }
 }
 
-async function saveCard() {
-  if (!cardDraft.value) return
-  savingCard.value = true
+async function handleGenerateCard(idx: number) {
+  extractingIdx.value = idx
+  const content = messages.value[idx].content
+
   try {
+    const card = await generateFlashcard(content)
+    if (!card) {
+      ElMessage.error('知识提取失败，请重试')
+      return
+    }
+
     await createFlashcard({
       videoId: props.videoId || props.courseId,
-      term: cardDraft.value.term,
-      definition: cardDraft.value.definition,
-      example: cardDraft.value.example || null,
+      userId: studentId.value ?? undefined,
+      term: card.term,
+      definition: card.definition,
+      example: card.example || null,
     })
-    // 标记来源消息已生成卡片
-    if (pendingCardIdx.value !== null) {
-      messages.value[pendingCardIdx.value].isFlashcardGenerated = true
-      saveHistory(messages.value)
-    }
-    cardDraft.value = null
-    pendingCardIdx.value = null
-    showToast('✅ 已加入复习大厅')
-  } catch {
-    showToast('保存失败，请重试')
+
+    messages.value[idx].isFlashcardGenerated = true
+    saveHistory(messages.value)
+    ElMessage.success(`知识卡片【${card.term}】已保存！`)
+  } catch (e) {
+    ElMessage.error('生成失败：' + (e instanceof Error ? e.message : '未知错误'))
   } finally {
-    savingCard.value = false
+    extractingIdx.value = null
   }
 }
 
@@ -289,8 +197,6 @@ onMounted(() => {
 watch(() => props.videoId, (newId, oldId) => {
   saveHistory(messages.value, oldId)
   messages.value = loadHistory(newId)
-  flipped.value = new Set()
-  cardDraft.value = null
   scrollBottom()
 })
 
@@ -361,7 +267,8 @@ async function send() {
 watch(() => messages.value.length, () => {
   saveHistory(messages.value)
   scrollBottom()
-})</script>
+})
+</script>
 
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }

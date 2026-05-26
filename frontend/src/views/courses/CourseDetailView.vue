@@ -1,641 +1,562 @@
 <template>
-  <main class="pt-24 pb-16 px-6 lg:px-12 max-w-[1600px] mx-auto">
-    <div class="flex flex-col lg:flex-row gap-10">
-      <!-- Main Content Area (70%) -->
-      <section class="lg:w-[70%] space-y-8">
-        <!-- Video Player Container -->
-        <div class="relative aspect-video bg-black rounded-xl overflow-hidden shadow-xl ring-1 ring-white/10 min-h-[360px] lg:min-h-[450px]">
-          <div v-if="loading" class="w-full h-full flex items-center justify-center text-white/80 text-sm">加载中...</div>
-          <div v-else-if="error" class="w-full h-full flex flex-col items-center justify-center gap-3 text-white/80 text-sm px-6 text-center">
-            <div>{{ error }}</div>
-            <button
-              class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors"
-              type="button"
-              @click="reload"
+  <main class="min-h-screen" style="background: #f5f7fa;">
+    <div class="max-w-6xl mx-auto px-6 py-10">
+
+      <nav class="flex items-center gap-2 text-sm text-on-surface-variant mb-8 font-body" aria-label="面包屑">
+        <router-link to="/courses" class="hover:text-primary transition-colors">{{ $t('courseDetail.breadcrumbList') }}</router-link>
+        <span class="material-symbols-outlined text-base opacity-40">chevron_right</span>
+        <span class="text-on-surface font-medium line-clamp-1">{{ course.title }}</span>
+      </nav>
+
+      <div class="flex flex-col lg:flex-row gap-8 items-start">
+
+        <div class="flex-1 min-w-0 space-y-6">
+
+          <div
+            class="w-full rounded-3xl overflow-hidden relative"
+            style="aspect-ratio: 16/7;"
+          >
+            <img
+              v-if="course.coverUrl"
+              :src="course.coverUrl"
+              :alt="course.title"
+              class="w-full h-full object-cover"
+            />
+            <div
+              v-else
+              class="w-full h-full flex flex-col items-center justify-center gap-4"
+              :style="{ background: coverGradient }"
             >
-              重试
-            </button>
+              <span class="text-6xl" aria-hidden="true">{{ languageEmoji }}</span>
+              <p class="text-white/80 text-lg font-bold font-headline">{{ course.language }} · {{ course.level ?? $t('courseDetail.levelPending') }}</p>
+            </div>
+
+            <div class="absolute top-4 left-4 flex items-center gap-2">
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-sm"
+                :class="languageBadgeClass"
+              >{{ course.language }}</span>
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold"
+                :class="levelBadgeClass"
+              >{{ course.level ?? $t('courseDetail.levelPending') }}</span>
+            </div>
           </div>
-          <div v-else-if="!course" class="w-full h-full flex items-center justify-center text-white/80 text-sm">课程不存在或已下架</div>
 
-          <template v-else>
-            <template v-if="activeResource?.resource_type === 'local'">
-              <video
-                ref="videoRef"
-                class="w-full h-full object-contain bg-black"
-                controls
-                :src="activeResource.source_url"
-                @timeupdate="videoCurrentTime = Math.floor(($event.target as HTMLVideoElement).currentTime)"
-                @play="startHeartbeat($event.target as HTMLVideoElement)"
-                @pause="stopHeartbeat"
-                @ended="onLocalEnded"
-                @loadedmetadata="onLoadedMetadata"
-              />
-            </template>
-
-            <template v-else-if="activeResource?.resource_type === 'youtube'">
-              <iframe
-                v-if="youtubeEmbedUrl"
-                class="w-full h-full"
-                :src="youtubeEmbedUrl"
-                title="YouTube player"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              />
-              <div v-else class="w-full h-full flex items-center justify-center text-white/80 text-sm">YouTube 链接无效</div>
-            </template>
-
-            <template v-else-if="activeResource?.resource_type === 'bilibili'">
-              <iframe
-                v-if="bilibiliEmbedUrl"
-                class="w-full h-full"
-                :src="bilibiliEmbedUrl"
-                title="Bilibili player"
-                frameborder="0"
-                allowfullscreen
-                referrerpolicy="strict-origin-when-cross-origin"
-                sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-              />
-              <!-- Bilibili fallback -->
-              <div v-else class="w-full h-full flex items-center justify-center p-6">
-                <div class="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-center">
-                  <div class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-4">
-                    <span class="material-symbols-outlined text-pink-300 text-2xl">play_circle</span>
-                  </div>
-                  <div class="text-white font-semibold text-base mb-1">无法内嵌播放</div>
-                  <div class="text-white/60 text-sm mb-5">该 Bilibili 链接无法解析为嵌入地址，请前往原网页观看。</div>
-                  <div class="text-white/40 text-xs break-all bg-black/30 rounded-lg px-3 py-2 mb-5">{{ activeResource?.source_url }}</div>
-                  <a
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors text-sm font-semibold"
-                    :href="activeResource?.source_url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span class="material-symbols-outlined text-base">open_in_new</span>
-                    跳转至原网页播放
-                  </a>
-                </div>
+          <div class="bg-white rounded-2xl p-7 shadow-sm border border-outline-variant/10">
+            <h1 class="text-2xl font-extrabold text-on-surface font-headline tracking-tight mb-4">
+              {{ course.title }}
+            </h1>
+            <div class="flex flex-wrap gap-5 text-sm text-on-surface-variant font-body">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-primary/60">person</span>
+                <span>{{ course.teacher ?? $t('courseDetail.teacherPending') }}</span>
               </div>
-            </template>
-
-            <template v-else>
-              <div class="w-full h-full flex items-center justify-center p-6">
-                <div class="w-full max-w-xl bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-6">
-                  <div class="text-white font-semibold text-lg mb-2">外部资源</div>
-                  <div class="text-white/80 text-sm mb-4">该内容需要前往第三方网站/平台学习。</div>
-                  <div class="text-white/70 text-xs break-all bg-black/30 rounded-lg p-3 mb-4">{{ activeResource?.source_url }}</div>
-                  <a
-                    class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-primary-dim transition-colors text-sm font-semibold"
-                    :href="activeResource?.source_url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    前往外部学习
-                  </a>
-                </div>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-primary/60">schedule</span>
+                <span>{{ course.schedule ?? $t('courseDetail.timePending') }}</span>
               </div>
-            </template>
-
-          </template>
-        </div>
-        <!-- Course Header Info -->
-        <div class="space-y-4">
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <h1 class="text-3xl font-bold tracking-tight text-on-surface font-headline">{{ course?.title || '课程播放' }}</h1>
-            <div class="flex items-center gap-3">
-              <button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-medium">
-                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">favorite</span>
-                <span>收藏</span>
-              </button>
-              <button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-dim transition-colors text-sm font-medium">
-                <span class="material-symbols-outlined">share</span>
-                <span>分享</span>
-              </button>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-primary/60">language</span>
+                <span>{{ course.language }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-primary/60">signal_cellular_alt</span>
+                <span>{{ course.level ?? $t('courseDetail.levelPending') }}</span>
+              </div>
             </div>
-          </div>
-          <div class="flex flex-wrap items-center gap-6 text-sm text-on-surface-variant font-body">
-            <div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded">
-              <span class="material-symbols-outlined text-base">verified_user</span>
-              公益引用声明
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-base">visibility</span>
-              128,402 次观看
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-base">schedule</span>
-              更新于 2023年10月
-            </div>
-          </div>
-        </div>
-        <!-- Tabs Section -->
-        <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
-          <div class="flex gap-8 border-b border-surface-container-high mb-8 font-body">
-            <button
-              class="pb-4"
-              :class="tab === 'intro' ? 'text-primary font-bold border-b-2 border-primary' : 'text-on-surface-variant hover:text-on-surface transition-colors'"
-              type="button"
-              @click="tab = 'intro'"
-            >
-              课程简介
-            </button>
-            <button
-              class="pb-4"
-              :class="tab === 'playlist' ? 'text-primary font-bold border-b-2 border-primary' : 'text-on-surface-variant hover:text-on-surface transition-colors'"
-              type="button"
-              @click="tab = 'playlist'"
-            >
-              剧集目录 ({{ course?.resources.length || 0 }})
-            </button>
-            <button
-              class="pb-4"
-              :class="tab === 'flashcards' ? 'text-primary font-bold border-b-2 border-primary' : 'text-on-surface-variant hover:text-on-surface transition-colors'"
-              type="button"
-              @click="tab = 'flashcards'; loadVideoFlashcards()"
-            >
-              知识卡片 ({{ videoFlashcards.length }})
-            </button>
-          </div>
-          <div v-if="tab === 'intro'" class="prose prose-slate max-w-none text-on-surface-variant leading-relaxed space-y-4 font-body">
-            <p>{{ course?.description || '暂无课程简介' }}</p>
           </div>
 
-          <div v-else-if="tab === 'playlist'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <button
-              v-for="(r, idx) in course?.resources || []"
-              :key="r.id"
-              type="button"
-              class="flex items-center justify-between p-4 rounded-lg border-l-4 transition-colors"
-              :class="r.id === activeResourceId ? 'bg-white ring-1 ring-primary/20 border-primary shadow-md' : 'bg-surface-container-low border-transparent hover:bg-surface-container-high'"
-              @click="activeResourceId = r.id"
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="text-xs font-bold" :class="r.id === activeResourceId ? 'text-primary' : 'text-on-surface-variant'">{{ String(idx + 1).padStart(2, '0') }}</span>
-                <span class="text-sm font-medium truncate" :class="r.id === activeResourceId ? 'text-on-surface font-bold' : 'text-on-surface'">
-                  {{ r.title || '未命名资源' }}
+          <div class="bg-white rounded-2xl p-7 shadow-sm border border-outline-variant/10">
+            <h2 class="text-lg font-bold text-on-surface font-headline mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">description</span>
+              {{ $t('courseDetail.introTitle') }}
+            </h2>
+            <div class="text-sm text-on-surface-variant font-body leading-relaxed space-y-3">
+              <p>{{ $t('courseDetail.introP1', { lang: course.language }) }}</p>
+              <p>{{ $t('courseDetail.introP2') }}</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-7 shadow-sm border border-outline-variant/10">
+            <h2 class="text-lg font-bold text-on-surface font-headline mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">group</span>
+              {{ $t('courseDetail.audienceTitle') }}
+            </h2>
+            <ul class="space-y-3">
+              <li
+                v-for="item in targetAudience"
+                :key="item"
+                class="flex items-start gap-3 text-sm text-on-surface-variant font-body"
+              >
+                <span class="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span class="material-symbols-outlined text-primary text-xs">check</span>
                 </span>
-              </div>
-              <div class="flex items-center gap-1.5 flex-shrink-0">
-                <span
-                  v-if="studyRecord.isCompleted"
-                  class="material-symbols-outlined text-green-500 text-base"
-                  style="font-variation-settings: 'FILL' 1;"
-                  title="已完成"
-                >check_circle</span>
-                <span
-                  v-else-if="studyRecord.lastPositionSeconds > 0"
-                  class="material-symbols-outlined text-blue-500 text-base"
-                  style="font-variation-settings: 'FILL' 1;"
-                  title="学习中"
-                >radio_button_checked</span>
-                <span class="text-[10px] font-bold uppercase tracking-wider" :class="resourceTagClassLocal(r.resource_type)">{{ resourceLabel(r.resource_type) }}</span>
-              </div>
-            </button>
+                {{ item }}
+              </li>
+            </ul>
           </div>
 
-          <!-- Flashcards Tab -->
-          <div v-else-if="tab === 'flashcards'">
-            <div v-if="flashcardsLoading" class="flex justify-center py-10">
-              <span class="material-symbols-outlined text-3xl text-slate-300 animate-spin">progress_activity</span>
-            </div>
-            <div v-else-if="videoFlashcards.length === 0" class="text-center py-10 text-slate-400">
-              <span class="material-symbols-outlined text-4xl mb-2 block">style</span>
-              <p class="text-sm">本节暂无知识卡片，在右侧 AI 助手中生成吧</p>
-            </div>
-            <div v-else class="space-y-2">
+          <div class="bg-white rounded-2xl p-7 shadow-sm border border-outline-variant/10">
+            <h2 class="text-lg font-bold text-on-surface font-headline mb-5 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">format_list_bulleted</span>
+              {{ $t('courseDetail.syllabusTitle') }}
+            </h2>
+            <div class="space-y-3">
               <div
-                v-for="card in videoFlashcards"
-                :key="card.id"
-                class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors"
+                v-for="(unit, idx) in syllabus"
+                :key="idx"
+                class="syllabus-item"
               >
-                <span class="material-symbols-outlined text-primary text-base mt-0.5 flex-shrink-0">style</span>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-on-surface">{{ card.term }}</p>
-                  <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-2">{{ card.definition }}</p>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 text-xs font-bold text-primary">
+                    {{ String(idx + 1).padStart(2, '0') }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-on-surface">{{ unit.title }}</p>
+                    <p class="text-xs text-on-surface-variant mt-0.5">{{ unit.desc }}</p>
+                  </div>
+                  <span class="text-xs text-on-surface-variant shrink-0 font-body">{{ unit.hours }} {{ $t('courseDetail.hoursSuffix') }}</span>
                 </div>
               </div>
             </div>
-            <div class="mt-6 flex justify-end">
-              <button
-                class="flex items-center gap-1.5 text-sm text-primary hover:underline"
-                @click="router.push('/flashcards')"
+          </div>
+
+          <!-- 视频课程目录 & 播放器 -->
+          <div class="bg-white rounded-2xl p-7 shadow-sm border border-outline-variant/10">
+            <h2 class="text-lg font-bold text-on-surface font-headline mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">play_circle</span>
+              {{ $t('courseDetail.videoLessons') }}
+            </h2>
+
+            <!-- 视频播放占位区 -->
+            <div
+              v-if="selectedLesson"
+              class="mb-5 rounded-xl overflow-hidden border border-outline-variant/15"
+              style="background: #0f172a;"
+            >
+              <div class="aspect-video flex flex-col items-center justify-center gap-3 text-white/90">
+                <span class="material-symbols-outlined text-5xl">smart_display</span>
+                <p class="font-bold text-lg">{{ selectedLesson.title }}</p>
+                <p class="text-sm text-white/50">{{ $t('courseDetail.episodeInfo', { episode: selectedLesson.episode, duration: selectedLesson.duration }) }}</p>
+                <div class="w-3/4 h-1.5 rounded-full bg-white/20 mt-2 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-primary transition-all duration-500"
+                    :style="{ width: (lessonProgress.get(selectedLesson.id) ?? 0) + '%' }"
+                  />
+                </div>
+                <span class="text-xs text-white/40">
+                  {{ $t('courseDetail.progressPercent', { percent: lessonProgress.get(selectedLesson.id) ?? 0 }) }}
+                </span>
+                <button
+                  type="button"
+                  class="mt-2 px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                  :class="(lessonProgress.get(selectedLesson.id) ?? 0) >= 95
+                    ? 'bg-green-500/20 text-green-400 cursor-default'
+                    : 'bg-primary/70 hover:bg-primary text-white'"
+                  :disabled="(lessonProgress.get(selectedLesson.id) ?? 0) >= 95"
+                  @click="simulateProgress(selectedLesson.id)"
+                >
+                  <span class="material-symbols-outlined text-base">
+                    {{ (lessonProgress.get(selectedLesson.id) ?? 0) >= 95 ? 'check_circle' : 'trending_up' }}
+                  </span>
+                  {{ $t('courseDetail.simulateProgress') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- 无选中课程时的占位 -->
+            <div
+              v-else
+              class="mb-5 rounded-xl border-2 border-dashed border-outline-variant/20 flex flex-col items-center justify-center py-14 text-on-surface-variant bg-slate-50/50"
+            >
+              <span class="material-symbols-outlined text-4xl mb-2">touch_app</span>
+              <p class="text-sm font-bold">{{ $t('courseDetail.clickToStart') }}</p>
+            </div>
+
+            <!-- 章节列表 -->
+            <div class="space-y-2">
+              <div
+                v-for="lesson in lessons"
+                :key="lesson.id"
+                class="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border"
+                :class="selectedLesson?.id === lesson.id
+                  ? 'bg-primary/5 border-primary/30 shadow-sm'
+                  : 'bg-slate-50 border-transparent hover:bg-slate-100'"
+                @click="selectedLessonId = lesson.id"
               >
-                查看全部知识卡片
-                <span class="material-symbols-outlined text-base">arrow_forward</span>
-              </button>
+                <span
+                  class="material-symbols-outlined text-xl shrink-0"
+                  :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'text-green-500' : 'text-primary/60'"
+                >
+                  {{ (lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'check_circle' : 'play_circle' }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-on-surface">
+                    {{ $t('courseDetail.lessonLabel', { episode: lesson.episode, title: lesson.title }) }}
+                  </p>
+                  <p class="text-xs text-on-surface-variant">{{ lesson.duration }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-20 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'bg-green-500' : 'bg-primary'"
+                      :style="{ width: (lessonProgress.get(lesson.id) ?? 0) + '%' }"
+                    />
+                  </div>
+                  <span
+                    class="text-xs font-bold w-10 text-right"
+                    :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'text-green-600' : 'text-primary'"
+                  >
+                    {{ lessonProgress.get(lesson.id) ?? 0 }}%
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
-      </section>
-      <!-- AI Sidebar (30%) -->
-      <aside class="hidden lg:flex flex-col lg:w-[30%] h-[calc(100vh-8rem)] sticky top-24">
-        <div class="bg-slate-50 dark:bg-slate-950 rounded-2xl flex flex-col h-full shadow-sm overflow-hidden border border-slate-200/50">
-          <!-- Sidebar Header -->
-          <div class="p-6 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined">smart_toy</span>
+
+        <aside class="w-full lg:w-80 shrink-0 lg:sticky lg:top-24">
+          <div class="bg-white rounded-3xl shadow-lg border border-outline-variant/10 overflow-hidden">
+
+            <div class="p-6 border-b border-outline-variant/10">
+              <div class="flex items-end gap-2 mb-1">
+                <span class="text-4xl font-black text-primary">¥{{ course.price }}</span>
+                <span class="text-sm text-on-surface-variant line-through mb-1">¥{{ course.originalPrice }}</span>
+              </div>
+              <p class="text-xs text-green-600 font-semibold">
+                {{ $t('courseDetail.discountPrefix') }}{{ course.originalPrice - course.price }}
+              </p>
+            </div>
+
+            <div class="px-6 py-4 space-y-3 border-b border-outline-variant/10">
+               <div class="flex items-center justify-between text-sm">
+                <span class="text-on-surface-variant font-body flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-base text-primary/50">video_library</span>
+                  {{ $t('courseDetail.totalLessons') }}
+                </span>
+                <span class="font-bold text-on-surface">{{ course.totalLessons }} {{ $t('courseDetail.hoursSuffix') }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-on-surface-variant font-body flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-base text-primary/50">schedule</span>
+                  {{ $t('courseDetail.duration') }}
+                </span>
+                <span class="font-bold text-on-surface">{{ course.duration }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-on-surface-variant font-body flex items-center gap-1.5">
+                   <span class="material-symbols-outlined text-base text-primary/50">group</span>
+                  {{ $t('courseDetail.classSize') }}
+                </span>
+                <span class="font-bold text-on-surface">{{ $t('courseDetail.smallClass') }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                 <span class="text-on-surface-variant font-body flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-base text-primary/50">workspace_premium</span>
+                  {{ $t('courseDetail.certificate') }}
+                </span>
+                <span class="font-bold text-green-600">{{ $t('courseDetail.awarded') }}</span>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-3">
+              <button
+                type="button"
+                class="enroll-btn w-full"
+                @click="handleEnroll"
+              >
+                <span class="material-symbols-outlined text-xl" aria-hidden="true">how_to_reg</span>
+                {{ $t('courseDetail.enrollBtn') }}
+              </button>
+              <button
+                type="button"
+                class="consult-btn w-full"
+                @click="handleConsult"
+              >
+                <span class="material-symbols-outlined text-xl" aria-hidden="true">support_agent</span>
+                {{ $t('courseDetail.consultBtn') }}
+              </button>
+              <p class="text-center text-xs text-on-surface-variant font-body">
+                {{ $t('courseDetail.refundPolicy') }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+            <h3 class="text-sm font-bold text-on-surface mb-3 font-headline">{{ $t('courseDetail.teacherTitle') }}</h3>
+             <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
+                :style="{ background: coverGradient }"
+              >
+                {{ (course.teacher ?? $t('courseDetail.defaultTeacher')).charAt(0) }}
               </div>
               <div>
-                <h2 class="font-headline text-sm font-bold text-on-surface">AI 学习助手</h2>
-                <p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-body">Your learning sanctuary</p>
-              </div>
-            </div>
-            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-          </div>
-          <!-- Chat Area -->
-          <div ref="chatContainerRef" class="flex-1 overflow-y-auto p-6 space-y-6 font-body">
-            <div
-              v-for="(m, idx) in chatMessages"
-              :key="idx"
-              class="flex gap-3 max-w-[90%]"
-              :class="m.role === 'user' ? 'ml-auto flex-row-reverse' : ''"
-            >
-              <div
-                class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden"
-                :class="m.role === 'user' ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-primary text-on-primary'"
-              >
-                <span v-if="m.role === 'ai'" class="material-symbols-outlined text-sm">smart_toy</span>
-                <span v-else class="material-symbols-outlined text-sm">person</span>
-              </div>
-              <div
-                class="p-4 rounded-2xl shadow-sm text-sm leading-relaxed"
-                :class="m.role === 'user'
-                  ? 'bg-primary text-on-primary rounded-tr-none'
-                  : (m.role === 'ai' && !m.content && sending)
-                    ? 'bg-white dark:bg-slate-900 rounded-tl-none italic text-on-surface-variant flex items-center gap-2'
-                    : 'bg-white dark:bg-slate-900 rounded-tl-none text-on-surface'"
-              >
-                <template v-if="m.role === 'ai' && !m.content && sending">
-                  <span class="flex gap-1">
-                    <span class="w-1 h-1 bg-primary rounded-full animate-bounce"></span>
-                    <span class="w-1 h-1 bg-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-                    <span class="w-1 h-1 bg-primary rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
-                  </span>
-                  AI 正在思考...
-                </template>
-                <template v-else>
-                  {{ m.content }}
-                </template>
+                <p class="text-sm font-bold text-on-surface">{{ course.teacher ?? $t('courseDetail.teacherPending') }}</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">{{ $t('courseDetail.seniorTeacher', { lang: course.language }) }}</p>
+                <div class="flex items-center gap-1 mt-1">
+                  <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+                  <span class="text-xs text-on-surface-variant ml-1">{{ $t('courseDetail.score') }}</span>
+                  </div>
               </div>
             </div>
           </div>
-          <!-- Chat Input -->
-          <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-            <div class="relative">
-              <textarea
-                v-model="chatInput"
-                class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 text-sm focus:ring-2 ring-primary/20 resize-none transition-all pr-12 font-body"
-                placeholder="向 AI 提问关于本节课的知识点..."
-                rows="3"
-                :disabled="sending"
-                @keydown.enter.exact.prevent="sendChat"
-                @keydown.enter.shift.exact.stop
-              ></textarea>
-              <button
-                class="absolute bottom-3 right-3 w-8 h-8 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-                type="button"
-                :disabled="sending"
-                @click="sendChat"
-              >
-                <span class="material-symbols-outlined text-lg">send</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </aside>
+
+        </aside>
+      </div>
     </div>
+
+    <Transition name="toast">
+      <div
+        v-if="toastVisible"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-xl"
+        style="background: linear-gradient(135deg, #335ea1 0%, #4f7fd4 100%);"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
+        {{ toastMsg }}
+      </div>
+    </Transition>
   </main>
-  
-  <!-- Mobile AI FAB -->
-  <button class="lg:hidden fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-40 active:scale-90 transition-transform">
-    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
-  </button>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getCourseById, getCourseProgress, reportProgress, type CourseDto, type ProgressDto, type VideoResourceType } from '@/api/course'
-import { streamChat, type ChatMessage as ApiChatMessage } from '@/api/chat'
-import { resourceLabel, resourceTagClass } from '@/domain/resourceMeta'
-import { fetchFlashcards, type Flashcard } from '@/api/flashcard'
-
-type TabKey = 'intro' | 'playlist' | 'flashcards'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { getGatewayCourses, type GatewayCourse } from '@/api/gateway'
+import { reportProgress } from '@/api/course'
 
 const route = useRoute()
-const router = useRouter()
-const tab = ref<TabKey>('intro')
+const { t } = useI18n()
+const courseId = computed(() => String(route.params.id ?? ''))
 
-const loading = ref(false)
-const error = ref('')
-const course = ref<CourseDto | null>(null)
-const activeResourceId = ref('')
-
-// --- Progress state ---
-const studyRecord = ref<ProgressDto>({ lastPositionSeconds: 0, isCompleted: false, progressPercent: 0 })
-const heartbeatTimer = ref<ReturnType<typeof setInterval> | null>(null)
-const videoRef = ref<HTMLVideoElement | null>(null)
-// 实时同步视频播放秒数，供 AI context 使用
-const videoCurrentTime = ref(0)
-
-// --- Flashcard state ---
-const videoFlashcards = ref<Flashcard[]>([])
-const flashcardsLoading = ref(false)
-
-async function loadVideoFlashcards() {
-  const vid = activeResource.value ? extractVideoId(activeResource.value) : ''
-  if (!vid) return
-  flashcardsLoading.value = true
-  try {
-    videoFlashcards.value = await fetchFlashcards(vid)
-  } catch { /* silent */ } finally {
-    flashcardsLoading.value = false
-  }
-}
-
-type ChatRole = 'user' | 'ai'
-type ChatMessage = { role: ChatRole; content: string }
-
-const chatMessages = ref<ChatMessage[]>([
-  {
-    role: 'ai',
-    content: '你好！我是你的 AI 学习助手。你可以问我关于本课程的知识点、学习路径或总结。',
-  },
-])
-
-const chatInput = ref('')
-const sending = ref(false)
-const chatContainerRef = ref<HTMLDivElement | null>(null)
-
-const courseId = computed(() => String(route.params.id || ''))
-
-const activeResource = computed(() => {
-  const list = course.value?.resources || []
-  return list.find((r) => r.id === activeResourceId.value) || list[0] || null
-})
-
-const youtubeEmbedUrl = computed(() => {
-  const url = activeResource.value?.resource_type === 'youtube' ? activeResource.value.source_url : ''
-  if (!url) return ''
-  const id = extractYouTubeId(url)
-  if (!id) return ''
-  return `https://www.youtube.com/embed/${id}`
-})
-
-const bilibiliEmbedUrl = computed(() => {
-  if (activeResource.value?.resource_type !== 'bilibili') return ''
-  const base = extractBilibiliEmbedUrl(activeResource.value.source_url)
-  if (!base) return ''
-  const t = studyRecord.value.lastPositionSeconds
-  return t > 0 ? `${base}&t=${t}` : base
-})
-
-// --- Progress helpers ---
-function stopHeartbeat() {
-  if (heartbeatTimer.value) {
-    clearInterval(heartbeatTimer.value)
-    heartbeatTimer.value = null
-  }
-}
-
-function startHeartbeat(video: HTMLVideoElement) {
-  stopHeartbeat()
-  heartbeatTimer.value = setInterval(async () => {
-    if (video.paused || video.ended) return
-    const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : undefined
-    try {
-      const result = await reportProgress(courseId.value, {
-        currentTime: Math.round(video.currentTime),
-        ...(dur !== undefined && { duration: dur }),
-      })
-      studyRecord.value = {
-        studyRecordId: result.studyRecordId,
-        lastPositionSeconds: result.lastPositionSeconds,
-        isCompleted: result.isCompleted,
-        progressPercent: studyRecord.value.progressPercent,
-      }
-    } catch { /* silent — don't interrupt playback */ }
-  }, 15000)
-}
-
-async function loadProgress() {
-  try {
-    studyRecord.value = await getCourseProgress(courseId.value)
-  } catch { /* silent fallback */ }
-}
-
-function onLoadedMetadata() {
-  const pos = studyRecord.value.lastPositionSeconds
-  if (pos > 5 && videoRef.value) {
-    videoRef.value.currentTime = pos
-  }
-}
-
-function extractBilibiliEmbedUrl(input: string): string {
-  const src = input.trim()
-
-  // 1. 纯 BV 号
-  if (/^BV[0-9A-Za-z]{10,}$/.test(src)) {
-    const url = `https://player.bilibili.com/player.html?bvid=${src}&as_wide=1&high_quality=1&danmaku=1`
-    console.log('[bilibili] embed url:', url)
-    return url
-  }
-
-  // 2. 完整 URL（www / m.bilibili.com）
-  try {
-    const u = new URL(src)
-    const host = u.hostname.toLowerCase()
-
-    if (host === 'b23.tv') {
-      console.log('[bilibili] b23.tv short link — fallback')
-      return ''
-    }
-
-    if (host === 'www.bilibili.com' || host === 'm.bilibili.com') {
-      const match = u.pathname.match(/\/video\/(BV[0-9A-Za-z]{10,})/)
-      if (match?.[1]) {
-        const url = `https://player.bilibili.com/player.html?bvid=${match[1]}&as_wide=1&high_quality=1&danmaku=1`
-        console.log('[bilibili] embed url:', url)
-        return url
-      }
-    }
-  } catch { /* ignore */ }
-
-  console.log('[bilibili] failed to parse:', src)
-  return ''
-}
-
-function extractYouTubeId(input: string) {
-  try {
-    const isId = /^[a-zA-Z0-9_-]{6,}$/.test(input) && !/^https?:\/\//.test(input)
-    if (isId) return input
-
-    const u = new URL(input)
-
-    if (u.hostname === 'youtu.be') {
-      return u.pathname.replace(/^\//, '')
-    }
-
-    if (u.hostname.endsWith('youtube.com')) {
-      const v = u.searchParams.get('v')
-      if (v) return v
-
-      const parts = u.pathname.split('/').filter(Boolean)
-      const embedIdx = parts.indexOf('embed')
-      if (embedIdx >= 0 && parts[embedIdx + 1]) return parts[embedIdx + 1]
-
-      const shortsIdx = parts.indexOf('shorts')
-      if (shortsIdx >= 0 && parts[shortsIdx + 1]) return parts[shortsIdx + 1]
-    }
-
-    return ''
-  } catch {
-    return ''
-  }
-}
-
-function resourceTagClassLocal(t: VideoResourceType) {
-  return `${resourceTagClass(t)} px-2 py-0.5 rounded`
-}
-
-// 从当前资源提取平台视频 ID，供 AI context 使用
-function extractVideoId(r: { resource_type: string; source_url: string }): string {
-  if (r.resource_type === 'youtube') return extractYouTubeId(r.source_url)
-  if (r.resource_type === 'bilibili') {
-    const src = r.source_url.trim()
-    if (/^BV[0-9A-Za-z]{10,}$/.test(src)) return src
-    try {
-      const match = new URL(src).pathname.match(/\/video\/(BV[0-9A-Za-z]{10,})/)
-      return match?.[1] ?? ''
-    } catch { return '' }
-  }
-  return ''
-}
-
-async function scrollChatToBottom() {
-  await nextTick()
-  const el = chatContainerRef.value
-  if (!el) return
-  el.scrollTop = el.scrollHeight
-}
-
-async function sendChat() {
-  if (sending.value) return
-  const content = chatInput.value.trim()
-  if (!content) return
-
-  chatMessages.value.push({ role: 'user', content })
-  chatInput.value = ''
-  await scrollChatToBottom()
-
-  // 追加空 AI 消息，流式内容直接追加进来（打字机效果）
-  chatMessages.value.push({ role: 'ai', content: '' })
-  const aiIndex = chatMessages.value.length - 1
-  sending.value = true
-
-  // 组装历史：跳过初始欢迎语（index 0 的 ai 消息），只保留真实对话轮次
-  // 注意：history 必须以 user 消息开头，否则部分模型会忽略 system prompt
-  const history: ApiChatMessage[] = chatMessages.value
-    .slice(1, aiIndex) // 跳过 index 0 的欢迎语
-    .filter((m) => (m.role === 'user' || m.role === 'ai') && m.content.trim())
-    .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }))
-
-  // history 为空（第一次对话）时，直接用当前用户消息，避免 isValidMessages 校验失败
-  const messagesPayload: ApiChatMessage[] = history.length > 0
-    ? history
-    : [{ role: 'user', content }]
-
-  const context = {
-    courseName: course.value?.title ?? '',
-    currentTimestamp: videoCurrentTime.value,
-    videoId: activeResource.value ? extractVideoId(activeResource.value) : '',
-    platform: activeResource.value?.resource_type ?? '',
-  }
-
-  // 调试：确认 context 值
-  console.log('[sendChat] context:', JSON.stringify(context))
-  console.log('[sendChat] history length:', history.length)
-
-  try {
-    await streamChat(messagesPayload, context, (chunk) => {
-      chatMessages.value[aiIndex].content += chunk
-      scrollChatToBottom()
-    })
-    if (!chatMessages.value[aiIndex].content) {
-      chatMessages.value[aiIndex].content = '（空回复）'
-    }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : '请求失败'
-    chatMessages.value[aiIndex].content = `AI 请求失败：${msg}`
-  } finally {
-    sending.value = false
-    await scrollChatToBottom()
-  }
-}
-
-async function reload() {
-  error.value = ''
-  loading.value = true
-  try {
-    const data = await getCourseById(courseId.value)
-    course.value = data
-    const first = data.resources[0]
-    activeResourceId.value = first ? first.id : ''
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载课程失败'
-  } finally {
-    loading.value = false
-  }
-  await loadProgress()
-}
-
-async function onLocalEnded() {
-  stopHeartbeat()
-  const r = activeResource.value
-  if (!course.value || !r) return
-  const video = videoRef.value
-  try {
-    const result = await reportProgress(course.value.id, {
-      currentTime: video ? Math.round(video.duration) : 0,
-      duration: video && isFinite(video.duration) ? video.duration : undefined,
-    })
-    studyRecord.value = {
-      studyRecordId: result.studyRecordId,
-      lastPositionSeconds: result.lastPositionSeconds,
-      isCompleted: result.isCompleted,
-      progressPercent: studyRecord.value.progressPercent,
-    }
-  } catch (e) {
-    console.log('[progress] ended report failed', e)
-  }
-}
-
-watch(
-  courseId,
-  async () => {
-    await reload()
-  },
-  { immediate: true },
-)
-
-watch(activeResourceId, () => {
-  stopHeartbeat()
-})
+const rawCourse = ref<GatewayCourse | null>(null)
 
 onMounted(async () => {
-  await scrollChatToBottom()
+  try {
+    const all = await getGatewayCourses()
+    rawCourse.value = all.find((c) => c.id === courseId.value) ?? all[0] ?? null
+  } catch {
+    // Отключение тишины не удалось, используйте значение по умолчанию.
+  }
 })
 
-onUnmounted(() => {
-  stopHeartbeat()
+// duration 用 i18n key 存储，在 computed 里动态翻译
+const PRICE_MAP: Record<string, { price: number; originalPrice: number; totalLessons: number; durationKey: string; durationN: number }> = {
+  c001: { price: 2980, originalPrice: 3980, totalLessons: 48, durationKey: 'months', durationN: 3 },
+  c002: { price: 1980, originalPrice: 2580, totalLessons: 32, durationKey: 'months', durationN: 2 },
+  c003: { price: 1280, originalPrice: 1680, totalLessons: 24, durationKey: 'weeks',  durationN: 6 },
+  c004: { price: 880,  originalPrice: 1280, totalLessons: 20, durationKey: 'weeks',  durationN: 5 },
+  c005: { price: 2480, originalPrice: 3200, totalLessons: 40, durationKey: 'months', durationN: 2.5 },
+  c006: { price: 980,  originalPrice: 1380, totalLessons: 24, durationKey: 'weeks',  durationN: 6 },
+  c007: { price: 3200, originalPrice: 4200, totalLessons: 56, durationKey: 'months', durationN: 4 },
+  c008: { price: 2680, originalPrice: 3480, totalLessons: 36, durationKey: 'months', durationN: 3 },
+  c009: { price: 1280, originalPrice: 1680, totalLessons: 24, durationKey: 'weeks',  durationN: 6 },
+  c010: { price: 2980, originalPrice: 3980, totalLessons: 48, durationKey: 'months', durationN: 3 },
+}
+
+const course = computed(() => {
+  const c = rawCourse.value
+  const raw = PRICE_MAP[courseId.value] ?? { price: 1999, originalPrice: 2599, totalLessons: 36, durationKey: 'months', durationN: 3 }
+  const extra = {
+    price: raw.price,
+    originalPrice: raw.originalPrice,
+    totalLessons: raw.totalLessons,
+    duration: t(`courseDetail.duration_${raw.durationKey}`, { n: raw.durationN }),
+  }
+  return {
+    id: c?.id ?? courseId.value,
+    title: c?.title ?? t('courseDetail.defaultCourseName'),
+    level: c?.level ?? null,
+    schedule: c?.schedule ?? null,
+    teacher: c?.teacher ?? null,
+    language: c?.language ?? '英语',
+    coverUrl: c?.coverUrl ?? null,
+    ...extra,
+  }
 })
 
-watch(
-  () => chatMessages.value.length,
-  async () => {
-    await scrollChatToBottom()
-  },
-)
+const COVER_GRADIENTS: Record<string, string> = {
+  英语: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+  俄语: 'linear-gradient(135deg, #991b1b 0%, #ef4444 100%)',
+  法语: 'linear-gradient(135deg, #5b21b6 0%, #8b5cf6 100%)',
+  日语: 'linear-gradient(135deg, #c2410c 0%, #f97316 100%)',
+  德语: 'linear-gradient(135deg, #92400e 0%, #f59e0b 100%)',
+  西班牙语: 'linear-gradient(135deg, #9f1239 0%, #f43f5e 100%)',
+  韩语: 'linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%)',
+}
+
+const LANGUAGE_EMOJIS: Record<string, string> = {
+  英语: '🇬🇧', 俄语: '🇷🇺', 法语: '🇫🇷', 日语: '🇯🇵',
+  德语: '🇩🇪', 西班牙语: '🇪🇸', 韩语: '🇰🇷',
+}
+
+const coverGradient = computed(() => COVER_GRADIENTS[course.value.language] ?? 'linear-gradient(135deg, #335ea1 0%, #4f7fd4 100%)')
+const languageEmoji = computed(() => LANGUAGE_EMOJIS[course.value.language] ?? '🌐')
+
+const LANG_BADGE: Record<string, string> = {
+  英语: 'bg-blue-100/90 text-blue-700',
+  俄语: 'bg-red-100/90 text-red-700',
+  法语: 'bg-purple-100/90 text-purple-700',
+  日语: 'bg-orange-100/90 text-orange-700',
+  德语: 'bg-yellow-100/90 text-yellow-800',
+  西班牙语: 'bg-rose-100/90 text-rose-700',
+  韩语: 'bg-pink-100/90 text-pink-700',
+}
+const languageBadgeClass = computed(() => LANG_BADGE[course.value.language] ?? 'bg-slate-100/90 text-slate-600')
+
+const LEVEL_BADGE: Record<string, string> = {
+  A1: 'bg-green-100 text-green-700',
+  A2: 'bg-green-100 text-green-700',
+  B1: 'bg-yellow-100 text-yellow-700',
+  B2: 'bg-orange-100 text-orange-700',
+  C1: 'bg-red-100 text-red-700',
+  C2: 'bg-red-100 text-red-700',
+}
+const levelBadgeClass = computed(() => {
+  const l = course.value.level
+  return l ? (LEVEL_BADGE[l] ?? 'bg-slate-100 text-slate-600') : 'bg-slate-100 text-slate-500'
+})
+
+// 将原本写死的数组转换为使用 Computed 的动态翻译数组
+const targetAudience = computed(() => [
+  t('courseDetail.audience1', { level: course.value.level ?? 'A1' }),
+  t('courseDetail.audience2'),
+  t('courseDetail.audience3'),
+])
+
+const syllabus = computed(() => [
+  { title: t('courseDetail.s1Title'), desc: t('courseDetail.s1Desc'), hours: 6 },
+  { title: t('courseDetail.s2Title'), desc: t('courseDetail.s2Desc'), hours: 12 },
+  { title: t('courseDetail.s3Title'), desc: t('courseDetail.s3Desc'), hours: 8 },
+  { title: t('courseDetail.s4Title'), desc: t('courseDetail.s4Desc'), hours: 10 },
+  { title: t('courseDetail.s5Title'), desc: t('courseDetail.s5Desc'), hours: 4 },
+])
+
+const toastVisible = ref(false)
+const toastMsg = ref('')
+
+function showToast(msg: string) {
+  toastMsg.value = msg
+  toastVisible.value = true
+  setTimeout(() => { toastVisible.value = false }, 3000)
+}
+
+function handleEnroll() {
+  showToast(t('courseDetail.enrollSuccess'))
+}
+
+function handleConsult() {
+  showToast(t('courseDetail.consultSuccess'))
+}
+
+// ── 视频课程 & 进度同步 ──────────────────────────────────────
+
+interface Lesson {
+  id: string
+  episode: number
+  title: string
+  duration: string
+  durationSeconds: number
+}
+
+const lessons = computed<Lesson[]>(() => [
+  { id: 'L01', episode: 1, title: t('courseDetail.lesson1Title'), duration: '18:32', durationSeconds: 1112 },
+  { id: 'L02', episode: 2, title: t('courseDetail.lesson2Title'), duration: '22:15', durationSeconds: 1335 },
+  { id: 'L03', episode: 3, title: t('courseDetail.lesson3Title'), duration: '25:08', durationSeconds: 1508 },
+  { id: 'L04', episode: 4, title: t('courseDetail.lesson4Title'), duration: '20:47', durationSeconds: 1247 },
+  { id: 'L05', episode: 5, title: t('courseDetail.lesson5Title'), duration: '28:10', durationSeconds: 1690 },
+])
+
+const selectedLessonId = ref<string | null>(null)
+const selectedLesson = computed(() => lessons.value.find((l) => l.id === selectedLessonId.value) ?? null)
+const lessonProgress = ref(new Map<string, number>())
+
+async function simulateProgress(lessonId: string) {
+  const lesson = lessons.value.find((l) => l.id === lessonId)
+  if (!lesson) return
+
+  try {
+    const targetTime = Math.round(lesson.durationSeconds * 0.95)
+    const result = await reportProgress(courseId.value, {
+      currentTime: targetTime,
+      duration: lesson.durationSeconds,
+    })
+
+    if (result.recorded) {
+      lessonProgress.value.set(lessonId, 95)
+    }
+  } catch {
+    // 即便后端不可用，前端 UI 仍然展示进度变化（降级）
+    lessonProgress.value.set(lessonId, 95)
+  }
+}
 </script>
+
+<style scoped>
+.enroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.875rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #335ea1 0%, #4f7fd4 100%);
+  box-shadow: 0 6px 20px rgba(51, 94, 161, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.enroll-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(51, 94, 161, 0.45);
+}
+.enroll-btn:active {
+  transform: translateY(0);
+}
+.consult-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #3b82f6;
+  background: transparent;
+  border: 2px solid #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.consult-btn:hover {
+  background: #eff6ff;
+}
+.syllabus-item {
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  background: #f8fafc;
+  border: 1px solid rgba(171, 179, 183, 0.12);
+  transition: background 0.15s ease;
+}
+.syllabus-item:hover {
+  background: #eff6ff;
+}
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(16px);
+}
+</style>

@@ -54,7 +54,7 @@
       <div class="w-full max-w-md">
         <!-- Tabs Container -->
         <div class="bg-surface-container-low p-1 rounded-xl mb-10 flex space-x-1">
-          <button 
+          <button
             @click="isLogin = true"
             :class="[
               'flex-1 py-3 text-sm font-headline rounded-lg transition-all duration-300',
@@ -63,7 +63,7 @@
           >
             登录
           </button>
-          <button 
+          <button
             @click="isLogin = false"
             :class="[
               'flex-1 py-3 text-sm font-headline rounded-lg transition-all duration-300',
@@ -83,18 +83,43 @@
               <p class="text-on-surface-variant text-sm mt-2">请登录您的账户以继续学习</p>
             </header>
             <form class="space-y-6" @submit.prevent="handleLogin">
+              <!-- Error banner -->
+              <div
+                v-if="loginError"
+                class="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm"
+                role="alert"
+              >
+                <span class="material-symbols-outlined text-base mt-0.5 shrink-0">error_outline</span>
+                <span>{{ loginError }}</span>
+              </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">邮箱地址</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
-                  <input class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="name@example.com" type="email"/>
+                  <input
+                    v-model="loginEmail"
+                    class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="name@example.com"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">密码</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
-                  <input class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="••••••••" type="password"/>
+                  <input
+                    v-model="loginPassword"
+                    class="w-full pl-12 pr-4 py-3.5 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="••••••••"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
               <div class="flex items-center justify-between">
@@ -104,9 +129,14 @@
                 </label>
                 <a class="text-sm font-medium text-primary hover:text-primary-dim transition-colors" href="#">忘记密码？</a>
               </div>
-              <button class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center space-x-2" type="submit">
-                <span>立即登录</span>
-                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+              <button
+                class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
+                type="submit"
+                :disabled="submitting"
+              >
+                <span v-if="submitting" class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                <span>{{ submitting ? '登录中…' : '立即登录' }}</span>
+                <span v-if="!submitting" class="material-symbols-outlined text-lg">arrow_forward</span>
               </button>
             </form>
           </div>
@@ -118,36 +148,80 @@
               <p class="text-on-surface-variant text-sm mt-2">开启您的终身学习之旅</p>
             </header>
             <form class="space-y-5" @submit.prevent="handleRegister">
+              <!-- Error banner -->
+              <div
+                v-if="registerError"
+                class="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm"
+                role="alert"
+              >
+                <span class="material-symbols-outlined text-base mt-0.5 shrink-0">error_outline</span>
+                <span>{{ registerError }}</span>
+              </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">用户名</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">person</span>
-                  <input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="学习先行者" type="text"/>
+                  <input
+                    v-model="registerName"
+                    class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="学习先行者"
+                    type="text"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">邮箱地址</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
-                  <input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="edu@example.com" type="email"/>
+                  <input
+                    v-model="registerEmail"
+                    class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="edu@example.com"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">设置密码</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
-                  <input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="至少8位字符" type="password"/>
+                  <input
+                    v-model="registerPassword"
+                    class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="至少6位字符"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">确认密码</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">verified_user</span>
-                  <input class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all" placeholder="再次输入密码" type="password"/>
+                  <input
+                    v-model="registerConfirmPassword"
+                    class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
+                    placeholder="再次输入密码"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                    :disabled="submitting"
+                  />
                 </div>
               </div>
-              <button class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-2" type="submit">
-                立即注册
+              <button
+                class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
+                type="submit"
+                :disabled="submitting"
+              >
+                {{ submitting ? '注册中…' : '立即注册' }}
               </button>
               <p class="text-center text-[10px] sm:text-xs text-on-surface-variant leading-relaxed px-4">
                 注册即代表同意《OpenEdu 公益服务协议》和《用户隐私政策》。我们将保护您的数据安全。
@@ -181,18 +255,76 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStudentAuth } from '@/composables/useStudentAuth'
 
 const isLogin = ref(true)
 const router = useRouter()
+const { login, register } = useStudentAuth()
 
-const handleLogin = () => {
-  // Mock login
-  router.push('/dashboard')
+const submitting = ref(false)
+
+// ── Login form state ──
+const loginEmail = ref('')
+const loginPassword = ref('')
+const loginError = ref('')
+
+// ── Register form state ──
+const registerName = ref('')
+const registerEmail = ref('')
+const registerPassword = ref('')
+const registerConfirmPassword = ref('')
+const registerError = ref('')
+
+async function handleLogin() {
+  loginError.value = ''
+  const email = loginEmail.value.trim()
+  const password = loginPassword.value
+
+  if (!email || !password) {
+    loginError.value = '请填写邮箱和密码'
+    return
+  }
+
+  submitting.value = true
+  try {
+    await login({ email, password })
+    router.push('/dashboard')
+  } catch (e) {
+    loginError.value = e instanceof Error ? e.message : '登录失败，请重试'
+  } finally {
+    submitting.value = false
+  }
 }
 
-const handleRegister = () => {
-  // Mock register
-  isLogin.value = true
+async function handleRegister() {
+  registerError.value = ''
+  const name = registerName.value.trim()
+  const email = registerEmail.value.trim()
+  const password = registerPassword.value
+  const confirm = registerConfirmPassword.value
+
+  if (!name || !email || !password || !confirm) {
+    registerError.value = '请填写所有字段'
+    return
+  }
+  if (password.length < 6) {
+    registerError.value = '密码至少需要6位字符'
+    return
+  }
+  if (password !== confirm) {
+    registerError.value = '两次输入的密码不一致'
+    return
+  }
+
+  submitting.value = true
+  try {
+    await register({ email, name, password })
+    router.push('/dashboard')
+  } catch (e) {
+    registerError.value = e instanceof Error ? e.message : '注册失败，请重试'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
