@@ -11,10 +11,12 @@ dist/
 .env.*
 .env.*.local
 !.env.example
+!.env.docker
 **/.env
 **/.env.*
 **/.env.*.local
 !**/.env.example
+!**/.env.docker
 
 # Logs
 *.log
