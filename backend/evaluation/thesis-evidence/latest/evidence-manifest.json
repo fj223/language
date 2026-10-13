@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-07-29T12:14:14.481Z",
+  "runId": "2026-07-29T12-14-14-481Z",
+  "files": [
+    {
+      "name": "DEFENSE_EVIDENCE.md",
+      "bytes": 1801,
+      "sha256": "516e31527756af3ffcc739a3600f607c3998307542b5e4ea50e5423e2897381b"
+    },
+    {
+      "name": "business-validation.csv",
+      "bytes": 1438,
+      "sha256": "ebbd7a2572d3e285ab0a054a8784a71613c31321f4ee0873e5b1ef7028be31ae"
+    },
+    {
+      "name": "confusion-matrix-long.csv",
+      "bytes": 2158,
+      "sha256": "83c3dd48676d4a1a3046d18c6a89edf125810054d08a25639ca3c43fea1574b7"
+    },
+    {
+      "name": "experiment-observations.csv",
+      "bytes": 37284,
+      "sha256": "00fb86726e1cf009884ec297737dbf93ec4a5f21b8be1447b9641d2ccdd371f7"
+    },
+    {
+      "name": "experiment-summary.json",
+      "bytes": 1482,
+      "sha256": "b21c3f7afad9e9e00fb2e047444d7892e9908bfa1b636a739be0d18488cb3b5b"
+    },
+    {
+      "name": "index.html",
+      "bytes": 2791,
+      "sha256": "0b678cdd680d0bc1055c0f68930ba6c26c294d334fa11cc35f9f5f4951679d65"
+    },
+    {
+      "name": "language-breakdown.csv",
+      "bytes": 257,
+      "sha256": "16d4d7f8f4001330c2752f196b1ce965e65764206f911cb7aad15203d32d5b74"
+    },
+    {
+      "name": "model-comparison.csv",
+      "bytes": 317,
+      "sha256": "d259564479cf2e03cc68922371368616031f715270b027b5da9e7c59014c0d04"
+    },
+    {
+      "name": "model-comparison.svg",
+      "bytes": 1466,
+      "sha256": "55ece6a72d3cec5323d39997a0a6d71f0968414ab1904e4a83caa6a7ab4a978f"
+    },
+    {
+      "name": "per-intent-metrics.csv",
+      "bytes": 896,
+      "sha256": "8b28f918b6f0663667498a47cd7ca105e4c8efadf206e491dc83ca3113aa4789"
+    }
+  ]
+}

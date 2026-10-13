@@ -1,0 +1,22 @@
+method,intent,support,precision,recall,f1
+Keyword baseline,TIMETABLE,28,1,0.0714,0.1333
+Keyword baseline,GRADES,28,0.7143,0.1786,0.2857
+Keyword baseline,COURSE_DISCOVERY,28,0,0,0
+Keyword baseline,STUDY_PLAN,28,1,0.0714,0.1333
+Keyword baseline,SCHOOL_POLICY,28,1,0.0714,0.1333
+Keyword baseline,TRANSLATE,28,1,0.0714,0.1333
+Keyword baseline,GENERAL,28,0.1492,0.9643,0.2584
+OpenEdu classifier,TIMETABLE,28,1,1,1
+OpenEdu classifier,GRADES,28,1,1,1
+OpenEdu classifier,COURSE_DISCOVERY,28,1,1,1
+OpenEdu classifier,STUDY_PLAN,28,1,1,1
+OpenEdu classifier,SCHOOL_POLICY,28,1,1,1
+OpenEdu classifier,TRANSLATE,28,1,1,1
+OpenEdu classifier,GENERAL,28,1,1,1
+Context resolver,TIMETABLE,2,1,1,1
+Context resolver,GRADES,2,1,1,1
+Context resolver,COURSE_DISCOVERY,2,1,1,1
+Context resolver,STUDY_PLAN,2,1,1,1
+Context resolver,SCHOOL_POLICY,2,1,1,1
+Context resolver,TRANSLATE,2,1,1,1
+Context resolver,GENERAL,2,1,1,1

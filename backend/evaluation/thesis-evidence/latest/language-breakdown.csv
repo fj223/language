@@ -1,0 +1,7 @@
+language,method,cases,correct,accuracy
+zh-CN,keyword-baseline,126,25,0.1984
+zh-CN,openedu-intent-classifier,126,126,1
+en,keyword-baseline,42,11,0.2619
+en,openedu-intent-classifier,42,42,1
+ru,keyword-baseline,28,4,0.1429
+ru,openedu-intent-classifier,28,28,1

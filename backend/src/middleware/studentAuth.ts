@@ -1,12 +1,31 @@
 import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-xinyanedu'
-
 export interface StudentJwtPayload {
   studentId: string
   email: string
   name: string
+}
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || 'dev-jwt-secret-xinyanedu'
+}
+
+function verifyStudentToken(token: string): StudentJwtPayload {
+  const payload = jwt.verify(token, getJwtSecret())
+  if (
+    typeof payload === 'string' ||
+    typeof payload.studentId !== 'string' ||
+    typeof payload.email !== 'string' ||
+    typeof payload.name !== 'string'
+  ) {
+    throw new Error('Invalid student token payload')
+  }
+  return {
+    studentId: payload.studentId,
+    email: payload.email,
+    name: payload.name,
+  }
 }
 
 declare global {
@@ -19,10 +38,10 @@ declare global {
 
 function extractBearer(req: Request): string | null {
   const header = req.headers.authorization
-  if (!header) return null
-  const parts = header.split(' ')
-  if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') return parts[1]
-  return parts[0] // bare token fallback
+  if (!header || Array.isArray(header)) return null
+  const [scheme = '', token] = header.split(' ')
+  if (scheme.toLowerCase() === 'bearer' && token) return token
+  return header
 }
 
 /**
@@ -34,7 +53,7 @@ export function optionalStudentAuth(req: Request, _res: Response, next: NextFunc
   if (!token) return next()
 
   try {
-    req.student = jwt.verify(token, JWT_SECRET) as StudentJwtPayload
+    req.student = verifyStudentToken(token)
   } catch {
     // token 无效，静默忽略
   }
@@ -52,7 +71,7 @@ export function requireStudentAuth(req: Request, res: Response, next: NextFuncti
   }
 
   try {
-    req.student = jwt.verify(token, JWT_SECRET) as StudentJwtPayload
+    req.student = verifyStudentToken(token)
     next()
   } catch {
     res.status(401).json({ ok: false, error: '登录已过期，请重新登录' })

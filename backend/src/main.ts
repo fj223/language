@@ -1,20 +1,29 @@
 import 'dotenv/config'
+import { randomUUID } from 'node:crypto'
 import express from 'express'
 import cors from 'cors'
 import apiRouter from './routes/api.js'
 import authRouter from './routes/auth.js'
 import flashcardRouter from './routes/flashcard.js'
-import legacyApiRouter from './routes/legacy-api.js'
 import gatewayApiRouter from './routes/gateway-api.js'
+import adminRouter from './routes/admin.js'
+import studentFeaturesRouter from './routes/studentFeatures.js'
+import learningRouter from './routes/learning.js'
 import { errorHandler, notFoundHandler } from './middleware/errors.js'
 import { prisma } from './db/prisma.js'
 import helmet from 'helmet'
-import rateLimit from 'express-rate-limit'
 import { validateEnv } from './config/env.js'
+import { apiRateLimit } from './middleware/rateLimit.js'
+import { ensureBootstrapAdmin } from './services/bootstrapService.js'
+import { ensureDefaultPolicies } from './services/schoolPolicyService.js'
 
 const app = express()
 
 validateEnv()
+app.disable('x-powered-by')
+if ((process.env.NODE_ENV || 'development') === 'production') {
+  app.set('trust proxy', 1)
+}
 
 const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
@@ -36,40 +45,74 @@ app.use(helmet())
 
 app.use(express.json({ limit: '1mb' }))
 
-// 全局 API 接口限流 — 抗压测试专用配置
-const apiLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 分钟窗口
-  max: 15,                  // 每个 IP 最多 15 次请求
-  message: { ok: false, error: '请求过于频繁，请稍后再试' },
-  standardHeaders: true,    // 返回 RateLimit-* 标准头
-  legacyHeaders: false,     // 禁用 X-RateLimit-* 旧版头
+app.use((req, res, next) => {
+  const requestId = req.headers['x-request-id']?.toString().slice(0, 100) || randomUUID()
+  const startedAt = Date.now()
+  res.setHeader('x-request-id', requestId)
+  res.on('finish', () => {
+    const elapsedMs = Date.now() - startedAt
+    console.log(`[http] ${requestId} ${req.method} ${req.originalUrl} ${res.statusCode} ${elapsedMs}ms`)
+  })
+  next()
 })
 
-app.use('/api', apiLimiter)
+app.get('/api/health', (_req, res) => {
+  res.json({
+    ok: true,
+    data: { status: 'up', uptimeSeconds: Math.round(process.uptime()) },
+  })
+})
+
+app.get('/api/ready', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ ok: true, data: { status: 'ready', database: 'connected' } })
+  } catch {
+    res.status(503).json({ ok: false, error: 'Database is unavailable' })
+  }
+})
+
+app.use('/api', apiRateLimit)
 
 app.use('/api', apiRouter)
 app.use('/api', authRouter)
+app.use('/api', adminRouter)
+app.use('/api', studentFeaturesRouter)
+app.use('/api', learningRouter)
 app.use('/api', flashcardRouter)
-app.use('/api/legacy', legacyApiRouter)
-app.use('/api/gateway', gatewayApiRouter)
-
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, message: 'Backend is running!' })
+app.use('/api/legacy', (_req, res) => {
+  res.status(410).json({
+    ok: false,
+    error: 'Legacy API has been retired. Use /api/gateway instead.',
+  })
 })
+app.use('/api/gateway', gatewayApiRouter)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
 
 const port = process.env.PORT || 3000
 
+await ensureBootstrapAdmin()
+await ensureDefaultPolicies()
+
 const server = app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`)
 })
 
 async function shutdown(signal: string) {
+  if (!server.listening) return
   try {
     console.log(`[shutdown] ${signal}`)
-    server.close(() => {})
+    await new Promise<void>((resolve, reject) => {
+      const forceTimer = setTimeout(resolve, 10_000)
+      forceTimer.unref()
+      server.close((error) => {
+        clearTimeout(forceTimer)
+        if (error) reject(error)
+        else resolve()
+      })
+    })
     await prisma.$disconnect()
   } finally {
     process.exit(0)

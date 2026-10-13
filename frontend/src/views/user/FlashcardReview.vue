@@ -12,6 +12,7 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
+          <LanguageSwitcher />
           <!-- Search -->
           <div class="relative flex-1 sm:flex-none">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">
@@ -166,6 +167,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { fetchFlashcards, deleteFlashcard, type Flashcard } from '@/api/flashcard'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 
 const { t } = useI18n()
 const router = useRouter()

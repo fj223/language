@@ -5,20 +5,20 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '../db/prisma.js'
 import { sendError, sendOk } from '../lib/apiResponse.js'
 import { requireStudentAuth, type StudentJwtPayload } from '../middleware/studentAuth.js'
+import { authRateLimit } from '../middleware/rateLimit.js'
 
 const router = Router()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-xinyanedu'
 const JWT_EXPIRES_IN = '7d'
 
 function signToken(payload: StudentJwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+  return jwt.sign(payload, process.env.JWT_SECRET || 'dev-jwt-secret-xinyanedu', { expiresIn: JWT_EXPIRES_IN })
 }
 
 // ============================================================
 // POST /api/register
 // ============================================================
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
@@ -29,7 +29,8 @@ router.post('/register', async (req: Request, res: Response) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { sendError(res, '邮箱格式不正确', 400); return }
     if (!name) { sendError(res, '用户名不能为空', 400); return }
     if (name.length < 2 || name.length > 50) { sendError(res, '用户名需要2-50个字符', 400); return }
-    if (!password || password.length < 6) { sendError(res, '密码至少需要6位字符', 400); return }
+    if (!password || password.length < 8) { sendError(res, '密码至少需要8位字符', 400); return }
+    if (password.length > 128) { sendError(res, '密码不能超过128位字符', 400); return }
 
     const existing = await prisma.student.findUnique({ where: { email }, select: { id: true } })
     if (existing) { sendError(res, '该邮箱已被注册', 409); return }
@@ -55,7 +56,7 @@ router.post('/register', async (req: Request, res: Response) => {
 // ============================================================
 // POST /api/login
 // ============================================================
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authRateLimit, async (req: Request, res: Response) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''

@@ -11,10 +11,10 @@
         </p>
       </div>
 
-      <div class="flex justify-center mb-8">
+      <div class="-mx-6 mb-8 overflow-x-auto px-6 pb-2 sm:mx-0 sm:flex sm:justify-center sm:px-0">
         <nav
-          class="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-white shadow-sm border border-outline-variant/20"
-          aria-label="语种分类"
+          class="inline-flex min-w-max items-center gap-1 p-1.5 rounded-2xl bg-white shadow-sm border border-outline-variant/20"
+          :aria-label="$t('courseList.languageCategories')"
           role="tablist"
         >
           <button
@@ -46,7 +46,7 @@
             :placeholder="$t('courseList.searchPlaceholder')"
             class="w-full pl-12 pr-4 py-3 rounded-2xl border border-outline-variant/30 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all font-body shadow-sm"
             :disabled="loading"
-            aria-label="搜索课程"
+            :aria-label="$t('courseList.searchAria')"
           />
         </div>
         <button
@@ -130,6 +130,7 @@
               :src="course.coverUrl || defaultCover"
               :alt="course.title"
               loading="lazy"
+              @error="useDefaultCover"
             />
             <span
               class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm"
@@ -137,6 +138,18 @@
             >
               {{ getLangLabel(course.language) }}
             </span>
+            <button
+              type="button"
+              class="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-md backdrop-blur transition hover:scale-105 hover:text-rose-500 disabled:cursor-wait"
+              :class="{ 'text-rose-500': favoriteIds.has(course.id) }"
+              :disabled="favoriteBusyId === course.id"
+              :aria-label="favoriteIds.has(course.id) ? $t('courseList.removeFavoriteLabel', { title: course.title }) : $t('courseList.addFavoriteLabel', { title: course.title })"
+              @click.stop="toggleFavorite(course)"
+            >
+              <span class="material-symbols-outlined" :style="favoriteIds.has(course.id) ? `font-variation-settings:'FILL' 1` : ''">
+                {{ favoriteBusyId === course.id ? 'progress_activity' : 'favorite' }}
+              </span>
+            </button>
           </div>
 
           <div class="p-5 flex flex-col flex-1 gap-3">
@@ -177,7 +190,7 @@
       </div>
 
       <div v-if="totalPages > 1" class="mt-14 flex justify-center">
-        <nav class="flex items-center gap-1 font-body text-sm font-medium" aria-label="分页导航">
+        <nav class="flex items-center gap-1 font-body text-sm font-medium" :aria-label="$t('courseList.pagination')">
           <button
             type="button"
             class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-on-surface-variant transition-all disabled:opacity-40"
@@ -221,6 +234,12 @@
         </nav>
       </div>
 
+      <Transition name="toast">
+        <div v-if="toast" class="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-xl" role="status">
+          {{ toast }}
+        </div>
+      </Transition>
+
     </div>
   </main>
 </template>
@@ -230,11 +249,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getGatewayCourses, type GatewayCourse } from '@/api/gateway'
+import { addFavorite, getFavorites, removeFavorite } from '@/api/studentFeatures'
+import { useStudentAuth } from '@/composables/useStudentAuth'
 import defaultCover from '@/assets/hero.png'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { isLoggedIn } = useStudentAuth()
 
 const PAGE_SIZE = 12
 const DEBOUNCE_MS = 400
@@ -254,6 +276,10 @@ const LANGUAGE_TABS = computed(() => [
 const courses = ref<GatewayCourse[]>([])
 const loading = ref(false)
 const error = ref('')
+const favoriteIds = ref(new Set<string>())
+const favoriteBusyId = ref('')
+const toast = ref('')
+let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const page = ref(Number(route.query.page) || 1)
 const selectedLanguage = ref<string>((route.query.language as string) || '')
@@ -266,10 +292,13 @@ async function loadCourses() {
   loading.value = true
   error.value = ''
   try {
-    courses.value = await getGatewayCourses({
-      language: selectedLanguage.value || undefined,
-      q: searchInput.value.trim() || undefined,
-    })
+    courses.value = await getGatewayCourses(
+      {
+        language: selectedLanguage.value || undefined,
+        q: searchInput.value.trim() || undefined,
+      },
+      locale.value,
+    )
     if (page.value > totalPages.value && totalPages.value > 0) {
       page.value = totalPages.value
     }
@@ -310,6 +339,47 @@ function resetAll() {
   page.value = 1
   syncUrl()
   loadCourses()
+}
+
+function showToast(message: string) {
+  toast.value = message
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toast.value = '' }, 2400)
+}
+
+async function loadFavorites() {
+  if (!isLoggedIn.value) return
+  try {
+    favoriteIds.value = new Set((await getFavorites(locale.value)).map((item) => item.courseId))
+  } catch {
+    showToast(t('courseList.favoriteStatusError'))
+  }
+}
+
+async function toggleFavorite(course: GatewayCourse) {
+  if (!isLoggedIn.value) {
+    await router.push({ path: '/auth', query: { redirect: route.fullPath } })
+    return
+  }
+  if (favoriteBusyId.value) return
+  favoriteBusyId.value = course.id
+  try {
+    const next = new Set(favoriteIds.value)
+    if (next.has(course.id)) {
+      await removeFavorite(course.id)
+      next.delete(course.id)
+      showToast(t('courseList.favoriteRemoved', { title: course.title }))
+    } else {
+      await addFavorite(course.id)
+      next.add(course.id)
+      showToast(t('courseList.favoriteAdded', { title: course.title }))
+    }
+    favoriteIds.value = next
+  } catch (reason) {
+    showToast(reason instanceof Error ? reason.message : t('courseList.favoriteActionError'))
+  } finally {
+    favoriteBusyId.value = ''
+  }
 }
 
 // ===== 防抖搜索 =====
@@ -378,7 +448,18 @@ function levelBadgeClass(level: string | null): string {
   return LEVEL_BADGE_CLASSES[level] ?? 'level-unknown'
 }
 
-onMounted(loadCourses)
+function useDefaultCover(event: Event) {
+  const image = event.currentTarget as HTMLImageElement
+  if (!image.src.endsWith(defaultCover)) image.src = defaultCover
+}
+
+onMounted(() => {
+  void Promise.allSettled([loadCourses(), loadFavorites()])
+})
+
+watch(locale, () => {
+  void loadCourses()
+})
 </script>
 
 <style scoped>

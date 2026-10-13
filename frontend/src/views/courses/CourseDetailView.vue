@@ -1,8 +1,22 @@
 <template>
   <main class="min-h-screen" style="background: #f5f7fa;">
     <div class="max-w-6xl mx-auto px-6 py-10">
+      <div v-if="loading" class="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-on-surface-variant" aria-live="polite">
+        <span class="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+        <p class="text-sm font-bold">{{ $t('courseDetail.loading') }}</p>
+      </div>
+      <div v-else-if="loadError" class="flex min-h-[55vh] flex-col items-center justify-center gap-4 text-center" role="alert">
+        <span class="material-symbols-outlined text-6xl text-slate-300">menu_book</span>
+        <h1 class="text-2xl font-black text-on-surface">{{ $t('courseDetail.unavailableTitle') }}</h1>
+        <p class="max-w-md text-sm text-on-surface-variant">{{ loadError }}</p>
+        <div class="flex gap-3">
+          <button type="button" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white" @click="loadCourse">{{ $t('courseDetail.reload') }}</button>
+          <router-link to="/courses" class="rounded-xl border border-outline-variant px-5 py-2.5 text-sm font-bold text-on-surface">{{ $t('courseDetail.backToCourses') }}</router-link>
+        </div>
+      </div>
+      <template v-else>
 
-      <nav class="flex items-center gap-2 text-sm text-on-surface-variant mb-8 font-body" aria-label="面包屑">
+      <nav class="flex items-center gap-2 text-sm text-on-surface-variant mb-8 font-body" :aria-label="$t('courseDetail.breadcrumbAria')">
         <router-link to="/courses" class="hover:text-primary transition-colors">{{ $t('courseDetail.breadcrumbList') }}</router-link>
         <span class="material-symbols-outlined text-base opacity-40">chevron_right</span>
         <span class="text-on-surface font-medium line-clamp-1">{{ course.title }}</span>
@@ -28,14 +42,14 @@
               :style="{ background: coverGradient }"
             >
               <span class="text-6xl" aria-hidden="true">{{ languageEmoji }}</span>
-              <p class="text-white/80 text-lg font-bold font-headline">{{ course.language }} · {{ course.level ?? $t('courseDetail.levelPending') }}</p>
+              <p class="text-white/80 text-lg font-bold font-headline">{{ displayLanguage }} · {{ course.level ?? $t('courseDetail.levelPending') }}</p>
             </div>
 
             <div class="absolute top-4 left-4 flex items-center gap-2">
               <span
                 class="px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-sm"
                 :class="languageBadgeClass"
-              >{{ course.language }}</span>
+              >{{ displayLanguage }}</span>
               <span
                 class="px-3 py-1 rounded-full text-xs font-bold"
                 :class="levelBadgeClass"
@@ -58,7 +72,7 @@
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-base text-primary/60">language</span>
-                <span>{{ course.language }}</span>
+                <span>{{ displayLanguage }}</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-base text-primary/60">signal_cellular_alt</span>
@@ -73,8 +87,11 @@
               {{ $t('courseDetail.introTitle') }}
             </h2>
             <div class="text-sm text-on-surface-variant font-body leading-relaxed space-y-3">
-              <p>{{ $t('courseDetail.introP1', { lang: course.language }) }}</p>
-              <p>{{ $t('courseDetail.introP2') }}</p>
+              <p v-if="course.description">{{ course.description }}</p>
+              <template v-else>
+                <p>{{ $t('courseDetail.introP1', { lang: displayLanguage }) }}</p>
+                <p>{{ $t('courseDetail.introP2') }}</p>
+              </template>
             </div>
           </div>
 
@@ -102,7 +119,10 @@
               <span class="material-symbols-outlined text-primary text-xl">format_list_bulleted</span>
               {{ $t('courseDetail.syllabusTitle') }}
             </h2>
-            <div class="space-y-3">
+            <div v-if="outlineLoading" class="rounded-xl bg-slate-50 p-5 text-center text-sm text-on-surface-variant">
+              {{ $t('courseDetail.outlineLoading') }}
+            </div>
+            <div v-else-if="syllabus.length" class="space-y-3">
               <div
                 v-for="(unit, idx) in syllabus"
                 :key="idx"
@@ -116,9 +136,12 @@
                     <p class="text-sm font-semibold text-on-surface">{{ unit.title }}</p>
                     <p class="text-xs text-on-surface-variant mt-0.5">{{ unit.desc }}</p>
                   </div>
-                  <span class="text-xs text-on-surface-variant shrink-0 font-body">{{ unit.hours }} {{ $t('courseDetail.hoursSuffix') }}</span>
+                  <span class="text-xs text-on-surface-variant shrink-0 font-body">{{ outlineMetricsText(unit) }}</span>
                 </div>
               </div>
+            </div>
+            <div v-else class="rounded-xl border border-dashed border-outline-variant/30 bg-slate-50 p-6 text-center text-sm text-on-surface-variant">
+              {{ $t('courseDetail.outlineEmpty') }}
             </div>
           </div>
 
@@ -135,37 +158,52 @@
               class="mb-5 rounded-xl overflow-hidden border border-outline-variant/15"
               style="background: #0f172a;"
             >
-              <div class="aspect-video flex flex-col items-center justify-center gap-3 text-white/90">
-                <span class="material-symbols-outlined text-5xl">smart_display</span>
+              <iframe
+                v-if="selectedLessonEmbedUrl"
+                class="aspect-video w-full"
+                :src="selectedLessonEmbedUrl"
+                :title="selectedLesson.title"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+              <video
+                v-else-if="selectedLessonDirectVideoUrl"
+                class="aspect-video w-full bg-black"
+                :src="selectedLessonDirectVideoUrl"
+                controls
+                preload="metadata"
+              ></video>
+              <div v-else class="aspect-video flex flex-col items-center justify-center gap-3 px-6 text-center text-white/90">
+                <span class="material-symbols-outlined text-5xl">{{ selectedLesson.contentUrl ? 'link' : 'video_off' }}</span>
                 <p class="font-bold text-lg">{{ selectedLesson.title }}</p>
                 <p class="text-sm text-white/50">{{ $t('courseDetail.episodeInfo', { episode: selectedLesson.episode, duration: selectedLesson.duration }) }}</p>
-                <div class="w-3/4 h-1.5 rounded-full bg-white/20 mt-2 overflow-hidden">
-                  <div
-                    class="h-full rounded-full bg-primary transition-all duration-500"
-                    :style="{ width: (lessonProgress.get(selectedLesson.id) ?? 0) + '%' }"
-                  />
-                </div>
-                <span class="text-xs text-white/40">
-                  {{ $t('courseDetail.progressPercent', { percent: lessonProgress.get(selectedLesson.id) ?? 0 }) }}
-                </span>
-                <button
-                  type="button"
-                  class="mt-2 px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
-                  :class="(lessonProgress.get(selectedLesson.id) ?? 0) >= 95
-                    ? 'bg-green-500/20 text-green-400 cursor-default'
-                    : 'bg-primary/70 hover:bg-primary text-white'"
-                  :disabled="(lessonProgress.get(selectedLesson.id) ?? 0) >= 95"
-                  @click="simulateProgress(selectedLesson.id)"
-                >
-                  <span class="material-symbols-outlined text-base">
-                    {{ (lessonProgress.get(selectedLesson.id) ?? 0) >= 95 ? 'check_circle' : 'trending_up' }}
-                  </span>
-                  {{ $t('courseDetail.simulateProgress') }}
-                </button>
+                <p v-if="selectedLesson.summary" class="max-w-xl px-6 text-center text-sm leading-6 text-white/60">{{ selectedLesson.summary }}</p>
+                <a
+                  v-if="selectedLessonResourceUrl"
+                  :href="selectedLessonResourceUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="mt-2 rounded-xl bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary/90"
+                >{{ $t('courseDetail.openResource') }}</a>
+                <template v-else>
+                  <p class="mt-2 text-sm font-bold text-amber-300">{{ $t('courseDetail.resourcePending') }}</p>
+                  <p class="max-w-lg text-xs leading-5 text-white/45">{{ $t('courseDetail.resourcePendingHint') }}</p>
+                  <router-link v-if="enrollment?.status === 'APPROVED'" :to="`/learn/${courseId}`" class="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary/90">{{ $t('courseDetail.startLearning') }}</router-link>
+                </template>
               </div>
             </div>
 
             <!-- 无选中课程时的占位 -->
+            <div
+              v-else-if="lessons.length === 0"
+              class="mb-5 rounded-xl border-2 border-dashed border-outline-variant/20 flex flex-col items-center justify-center py-14 px-6 text-center text-on-surface-variant bg-slate-50/50"
+            >
+              <span class="material-symbols-outlined text-4xl mb-2">folder_off</span>
+              <p class="text-sm font-bold">{{ $t('courseDetail.noLearningResources') }}</p>
+            </div>
+
+            <!-- 有资源但尚未选择时的占位 -->
             <div
               v-else
               class="mb-5 rounded-xl border-2 border-dashed border-outline-variant/20 flex flex-col items-center justify-center py-14 text-on-surface-variant bg-slate-50/50"
@@ -186,32 +224,20 @@
                 @click="selectedLessonId = lesson.id"
               >
                 <span
-                  class="material-symbols-outlined text-xl shrink-0"
-                  :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'text-green-500' : 'text-primary/60'"
+                  class="material-symbols-outlined text-xl shrink-0 text-primary/60"
                 >
-                  {{ (lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'check_circle' : 'play_circle' }}
+                  play_circle
                 </span>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-on-surface">
                     {{ $t('courseDetail.lessonLabel', { episode: lesson.episode, title: lesson.title }) }}
                   </p>
-                  <p class="text-xs text-on-surface-variant">{{ lesson.duration }}</p>
+                  <p class="text-xs text-on-surface-variant">{{ lesson.chapterTitle }} · {{ lesson.duration }}</p>
+                  <p class="mt-1 text-[11px] font-bold" :class="lesson.contentUrl ? 'text-emerald-600' : 'text-amber-600'">
+                    {{ lesson.contentUrl ? $t('courseDetail.resourceConfigured') : $t('courseDetail.resourcePendingShort') }}
+                  </p>
                 </div>
-                <div class="flex items-center gap-2">
-                  <div class="w-20 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-500"
-                      :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'bg-green-500' : 'bg-primary'"
-                      :style="{ width: (lessonProgress.get(lesson.id) ?? 0) + '%' }"
-                    />
-                  </div>
-                  <span
-                    class="text-xs font-bold w-10 text-right"
-                    :class="(lessonProgress.get(lesson.id) ?? 0) >= 95 ? 'text-green-600' : 'text-primary'"
-                  >
-                    {{ lessonProgress.get(lesson.id) ?? 0 }}%
-                  </span>
-                </div>
+                <span class="material-symbols-outlined text-slate-300">chevron_right</span>
               </div>
             </div>
           </div>
@@ -266,11 +292,22 @@
               <button
                 type="button"
                 class="enroll-btn w-full"
+                :disabled="enrollmentSubmitting || enrollment?.status === 'PENDING'"
                 @click="handleEnroll"
               >
-                <span class="material-symbols-outlined text-xl" aria-hidden="true">how_to_reg</span>
-                {{ $t('courseDetail.enrollBtn') }}
+                <span class="material-symbols-outlined text-xl" aria-hidden="true">{{ enrollment?.status === 'APPROVED' ? 'school' : 'how_to_reg' }}</span>
+                {{ enrollmentButtonText }}
               </button>
+              <div
+                v-if="enrollment"
+                class="rounded-xl border px-3 py-2.5 text-xs leading-5"
+                :class="enrollmentStatusClass"
+                role="status"
+              >
+                <p class="font-bold">{{ enrollmentStatusText }}</p>
+                <p v-if="enrollment.adminNote" class="mt-1">{{ $t('courseDetail.reviewNote') }}：{{ enrollment.adminNote }}</p>
+                <router-link to="/dashboard#enrollments" class="mt-1 inline-block font-bold underline">{{ $t('courseDetail.viewApplication') }}</router-link>
+              </div>
               <button
                 type="button"
                 class="consult-btn w-full"
@@ -296,7 +333,7 @@
               </div>
               <div>
                 <p class="text-sm font-bold text-on-surface">{{ course.teacher ?? $t('courseDetail.teacherPending') }}</p>
-                <p class="text-xs text-on-surface-variant mt-0.5">{{ $t('courseDetail.seniorTeacher', { lang: course.language }) }}</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">{{ $t('courseDetail.seniorTeacher', { lang: displayLanguage }) }}</p>
                 <div class="flex items-center gap-1 mt-1">
                   <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings:'FILL' 1;">star</span>
                   <span class="text-xs text-on-surface-variant ml-1">{{ $t('courseDetail.score') }}</span>
@@ -307,6 +344,42 @@
 
         </aside>
       </div>
+      </template>
+    </div>
+
+    <div
+      v-if="enrollmentModalOpen"
+      class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 px-4"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="$t('courseDetail.enrollmentDialogAria')"
+      @click.self="enrollmentModalOpen = false"
+    >
+      <form class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" @submit.prevent="confirmEnrollment">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold text-primary">{{ $t('courseDetail.enrollmentDialogTitle') }}</p>
+            <h2 class="mt-1 text-xl font-black text-on-surface">{{ course.title }}</h2>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-slate-700" :aria-label="$t('courseDetail.closeEnrollment')" @click="enrollmentModalOpen = false">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p class="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-700">
+          {{ $t('courseDetail.enrollmentExplanation') }}
+        </p>
+        <label class="mt-5 block text-sm font-bold text-on-surface">
+          {{ $t('courseDetail.enrollmentNote') }}
+          <textarea v-model.trim="enrollmentNote" maxlength="500" rows="4" class="mt-2 w-full resize-none rounded-xl border border-outline-variant/40 p-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10" :placeholder="$t('courseDetail.enrollmentNotePlaceholder')" />
+        </label>
+        <p v-if="enrollmentError" class="mt-3 text-sm font-bold text-red-600" role="alert">{{ enrollmentError }}</p>
+        <div class="mt-6 flex gap-3">
+          <button type="submit" :disabled="enrollmentSubmitting" class="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-black text-white disabled:opacity-50">
+            {{ enrollmentSubmitting ? $t('courseDetail.submitting') : $t('courseDetail.confirmEnrollment') }}
+          </button>
+          <button type="button" class="rounded-xl border border-outline-variant px-4 py-3 text-sm font-bold" @click="enrollmentModalOpen = false">{{ $t('courseDetail.cancel') }}</button>
+        </div>
+      </form>
     </div>
 
     <Transition name="toast">
@@ -325,25 +398,79 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { getGatewayCourses, type GatewayCourse } from '@/api/gateway'
-import { reportProgress } from '@/api/course'
+import { getGatewayCourse, type GatewayCourse } from '@/api/gateway'
+import { getPublicCourseOutline, type PublicCourseOutline } from '@/api/learning'
+import { useStudentAuth } from '@/composables/useStudentAuth'
+import {
+  getEnrollments,
+  submitEnrollment,
+  type EnrollmentApplication,
+} from '@/api/studentFeatures'
 
 const route = useRoute()
-const { t } = useI18n()
+const router = useRouter()
+const { t, locale } = useI18n()
+const { isLoggedIn } = useStudentAuth()
 const courseId = computed(() => String(route.params.id ?? ''))
 
 const rawCourse = ref<GatewayCourse | null>(null)
+const outline = ref<PublicCourseOutline | null>(null)
+const outlineLoading = ref(true)
+const loading = ref(true)
+const loadError = ref('')
+const enrollment = ref<EnrollmentApplication | null>(null)
+const enrollmentModalOpen = ref(false)
+const enrollmentSubmitting = ref(false)
+const enrollmentNote = ref('')
+const enrollmentError = ref('')
+const selectedLessonId = ref<string | null>(null)
 
-onMounted(async () => {
+async function loadCourse() {
+  loading.value = true
+  loadError.value = ''
   try {
-    const all = await getGatewayCourses()
-    rawCourse.value = all.find((c) => c.id === courseId.value) ?? all[0] ?? null
-  } catch {
-    // Отключение тишины не удалось, используйте значение по умолчанию.
+    rawCourse.value = await getGatewayCourse(courseId.value, locale.value)
+  } catch (error) {
+    rawCourse.value = null
+    loadError.value = error instanceof Error ? error.message : t('courseDetail.notFoundError')
+  } finally {
+    loading.value = false
   }
+}
+
+async function loadEnrollment() {
+  if (!isLoggedIn.value) return
+  try {
+    enrollment.value = (await getEnrollments(locale.value)).find((item) => item.courseId === courseId.value) ?? null
+  } catch {
+    enrollment.value = null
+  }
+}
+
+async function loadOutline() {
+  outlineLoading.value = true
+  try {
+    outline.value = await getPublicCourseOutline(courseId.value, locale.value)
+    const availableLessonIds = outline.value.chapters.flatMap((chapter) => chapter.lessons.map((lesson) => lesson.id))
+    if (!selectedLessonId.value || !availableLessonIds.includes(selectedLessonId.value)) {
+      selectedLessonId.value = availableLessonIds[0] ?? null
+    }
+  } catch {
+    outline.value = null
+  } finally {
+    outlineLoading.value = false
+  }
+}
+
+onMounted(() => {
+  void Promise.allSettled([loadCourse(), loadEnrollment(), loadOutline()])
+})
+
+watch(locale, () => {
+  void Promise.allSettled([loadCourse(), loadEnrollment(), loadOutline()])
 })
 
 // duration 用 i18n key 存储，在 computed 里动态翻译
@@ -366,7 +493,7 @@ const course = computed(() => {
   const extra = {
     price: raw.price,
     originalPrice: raw.originalPrice,
-    totalLessons: raw.totalLessons,
+    totalLessons: outline.value?.summary.lessonCount || raw.totalLessons,
     duration: t(`courseDetail.duration_${raw.durationKey}`, { n: raw.durationN }),
   }
   return {
@@ -377,6 +504,7 @@ const course = computed(() => {
     teacher: c?.teacher ?? null,
     language: c?.language ?? '英语',
     coverUrl: c?.coverUrl ?? null,
+    description: c?.description ?? null,
     ...extra,
   }
 })
@@ -398,6 +526,15 @@ const LANGUAGE_EMOJIS: Record<string, string> = {
 
 const coverGradient = computed(() => COVER_GRADIENTS[course.value.language] ?? 'linear-gradient(135deg, #335ea1 0%, #4f7fd4 100%)')
 const languageEmoji = computed(() => LANGUAGE_EMOJIS[course.value.language] ?? '🌐')
+const displayLanguage = computed(() => ({
+  英语: t('courseList.langEn'),
+  俄语: t('courseList.langRu'),
+  法语: t('courseList.langFr'),
+  日语: t('courseList.langJa'),
+  德语: t('courseList.langDe'),
+  西班牙语: t('courseList.langEs'),
+  韩语: t('courseList.langKo'),
+}[course.value.language] ?? course.value.language))
 
 const LANG_BADGE: Record<string, string> = {
   英语: 'bg-blue-100/90 text-blue-700',
@@ -430,13 +567,40 @@ const targetAudience = computed(() => [
   t('courseDetail.audience3'),
 ])
 
-const syllabus = computed(() => [
-  { title: t('courseDetail.s1Title'), desc: t('courseDetail.s1Desc'), hours: 6 },
-  { title: t('courseDetail.s2Title'), desc: t('courseDetail.s2Desc'), hours: 12 },
-  { title: t('courseDetail.s3Title'), desc: t('courseDetail.s3Desc'), hours: 8 },
-  { title: t('courseDetail.s4Title'), desc: t('courseDetail.s4Desc'), hours: 10 },
-  { title: t('courseDetail.s5Title'), desc: t('courseDetail.s5Desc'), hours: 4 },
-])
+const syllabus = computed(() => (outline.value?.chapters ?? []).map((chapter) => ({
+  title: chapter.title,
+  desc: chapter.description || t('courseDetail.chapterDescriptionFallback'),
+  lessons: chapter.lessons.length,
+  assignments: chapter.assignments.length,
+  quizzes: chapter.quizzes.length,
+})))
+
+function russianCount(count: number, one: string, few: string, many: string) {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 === 1 && mod100 !== 11) return `${count} ${one}`
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} ${few}`
+  return `${count} ${many}`
+}
+
+function outlineMetricsText(unit: { lessons: number; assignments: number; quizzes: number }) {
+  const current = String(locale.value)
+  if (current.startsWith('en')) {
+    return [
+      `${unit.lessons} ${unit.lessons === 1 ? 'lesson' : 'lessons'}`,
+      `${unit.assignments} ${unit.assignments === 1 ? 'assignment' : 'assignments'}`,
+      `${unit.quizzes} ${unit.quizzes === 1 ? 'quiz' : 'quizzes'}`,
+    ].join(' · ')
+  }
+  if (current.startsWith('ru')) {
+    return [
+      russianCount(unit.lessons, 'урок', 'урока', 'уроков'),
+      russianCount(unit.assignments, 'задание', 'задания', 'заданий'),
+      russianCount(unit.quizzes, 'тест', 'теста', 'тестов'),
+    ].join(' · ')
+  }
+  return t('courseDetail.outlineMetrics', unit)
+}
 
 const toastVisible = ref(false)
 const toastMsg = ref('')
@@ -447,11 +611,62 @@ function showToast(msg: string) {
   setTimeout(() => { toastVisible.value = false }, 3000)
 }
 
+const enrollmentButtonText = computed(() => {
+  if (enrollmentSubmitting.value) return t('courseDetail.submitting')
+  if (enrollment.value?.status === 'PENDING') return t('courseDetail.enrollmentPending')
+  if (enrollment.value?.status === 'APPROVED') return t('courseDetail.startLearning')
+  if (enrollment.value?.status === 'REJECTED' || enrollment.value?.status === 'CANCELLED') return t('courseDetail.resubmitEnrollment')
+  return t('courseDetail.enrollBtn')
+})
+
+const enrollmentStatusText = computed(() => ({
+  PENDING: t('courseDetail.statusPending'),
+  APPROVED: t('courseDetail.statusApproved'),
+  REJECTED: t('courseDetail.statusRejected'),
+  CANCELLED: t('courseDetail.statusCancelled'),
+}[enrollment.value?.status ?? 'PENDING']))
+
+const enrollmentStatusClass = computed(() => ({
+  PENDING: 'border-amber-200 bg-amber-50 text-amber-800',
+  APPROVED: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  REJECTED: 'border-rose-200 bg-rose-50 text-rose-800',
+  CANCELLED: 'border-slate-200 bg-slate-50 text-slate-600',
+}[enrollment.value?.status ?? 'PENDING']))
+
 function handleEnroll() {
-  showToast(t('courseDetail.enrollSuccess'))
+  if (!isLoggedIn.value) {
+    void router.push({ path: '/auth', query: { redirect: route.fullPath } })
+    return
+  }
+  if (enrollment.value?.status === 'APPROVED') {
+    void router.push(`/learn/${courseId.value}`)
+    return
+  }
+  if (enrollment.value?.status === 'PENDING') return
+  enrollmentError.value = ''
+  enrollmentNote.value = enrollment.value?.studentNote ?? ''
+  enrollmentModalOpen.value = true
+}
+
+async function confirmEnrollment() {
+  if (enrollmentSubmitting.value) return
+  enrollmentSubmitting.value = true
+  enrollmentError.value = ''
+  try {
+    enrollment.value = await submitEnrollment(courseId.value, enrollmentNote.value || undefined)
+    enrollmentModalOpen.value = false
+    showToast(t('courseDetail.enrollSuccess'))
+  } catch (error) {
+    enrollmentError.value = error instanceof Error ? error.message : t('courseDetail.enrollmentSubmitError')
+  } finally {
+    enrollmentSubmitting.value = false
+  }
 }
 
 function handleConsult() {
+  window.dispatchEvent(new CustomEvent('open-openedu-chatbot', {
+    detail: { prompt: t('courseDetail.consultPrompt', { title: course.value.title }) },
+  }))
   showToast(t('courseDetail.consultSuccess'))
 }
 
@@ -462,40 +677,52 @@ interface Lesson {
   episode: number
   title: string
   duration: string
-  durationSeconds: number
+  summary: string | null
+  chapterTitle: string
+  contentUrl: string | null
 }
 
-const lessons = computed<Lesson[]>(() => [
-  { id: 'L01', episode: 1, title: t('courseDetail.lesson1Title'), duration: '18:32', durationSeconds: 1112 },
-  { id: 'L02', episode: 2, title: t('courseDetail.lesson2Title'), duration: '22:15', durationSeconds: 1335 },
-  { id: 'L03', episode: 3, title: t('courseDetail.lesson3Title'), duration: '25:08', durationSeconds: 1508 },
-  { id: 'L04', episode: 4, title: t('courseDetail.lesson4Title'), duration: '20:47', durationSeconds: 1247 },
-  { id: 'L05', episode: 5, title: t('courseDetail.lesson5Title'), duration: '28:10', durationSeconds: 1690 },
-])
+const lessons = computed<Lesson[]>(() => {
+  let episode = 0
+  return (outline.value?.chapters ?? []).flatMap((chapter) => chapter.lessons.map((lesson) => ({
+    id: lesson.id,
+    episode: ++episode,
+    title: lesson.title,
+    duration: t('courseDetail.minutesCount', { count: lesson.durationMinutes }),
+    summary: lesson.summary,
+    chapterTitle: chapter.title,
+    contentUrl: lesson.contentUrl,
+  })))
+})
 
-const selectedLessonId = ref<string | null>(null)
 const selectedLesson = computed(() => lessons.value.find((l) => l.id === selectedLessonId.value) ?? null)
-const lessonProgress = ref(new Map<string, number>())
 
-async function simulateProgress(lessonId: string) {
-  const lesson = lessons.value.find((l) => l.id === lessonId)
-  if (!lesson) return
-
-  try {
-    const targetTime = Math.round(lesson.durationSeconds * 0.95)
-    const result = await reportProgress(courseId.value, {
-      currentTime: targetTime,
-      duration: lesson.durationSeconds,
-    })
-
-    if (result.recorded) {
-      lessonProgress.value.set(lessonId, 95)
-    }
-  } catch {
-    // 即便后端不可用，前端 UI 仍然展示进度变化（降级）
-    lessonProgress.value.set(lessonId, 95)
-  }
+function normalizeLessonResourceUrl(value: string) {
+  if (/^https?:\/\//i.test(value)) return value
+  if (value.startsWith('/')) return value
+  if (/^BV[\w]+$/i.test(value)) return `https://www.bilibili.com/video/${value}`
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(value)}`
 }
+
+function lessonEmbedUrl(value: string) {
+  const normalized = normalizeLessonResourceUrl(value)
+  const youtube = normalized.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/i)
+  if (youtube?.[1]) return `https://www.youtube.com/embed/${youtube[1]}`
+  const bilibili = normalized.match(/(?:video\/|bvid=)(BV[\w]+)/i)
+  if (bilibili?.[1]) return `https://player.bilibili.com/player.html?bvid=${bilibili[1]}&high_quality=1`
+  return null
+}
+
+const selectedLessonResourceUrl = computed(() => selectedLesson.value?.contentUrl
+  ? normalizeLessonResourceUrl(selectedLesson.value.contentUrl)
+  : null)
+const selectedLessonEmbedUrl = computed(() => selectedLesson.value?.contentUrl
+  ? lessonEmbedUrl(selectedLesson.value.contentUrl)
+  : null)
+const selectedLessonDirectVideoUrl = computed(() => {
+  const url = selectedLessonResourceUrl.value
+  return url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url) ? url : null
+})
 </script>
 
 <style scoped>
@@ -521,6 +748,13 @@ async function simulateProgress(lessonId: string) {
 }
 .enroll-btn:active {
   transform: translateY(0);
+}
+.enroll-btn:disabled {
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  box-shadow: none;
+  opacity: 0.82;
 }
 .consult-btn {
   display: flex;

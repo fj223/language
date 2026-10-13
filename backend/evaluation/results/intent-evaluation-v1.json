@@ -1,0 +1,1318 @@
+{
+  "dataset": {
+    "version": "1.0.0",
+    "description": "OpenEdu versioned regression benchmark for intent and context behavior. A separately collected human-labelled holdout set is still required for final thesis reporting.",
+    "directCases": 196,
+    "contextualCases": 14,
+    "totalCases": 210,
+    "languages": [
+      "zh-CN",
+      "en",
+      "ru"
+    ]
+  },
+  "generatedAt": "2026-10-13T14:09:28.750Z",
+  "baseline": {
+    "name": "keyword-baseline",
+    "caseCount": 196,
+    "accuracy": 0.2041,
+    "macroPrecision": 0.6948,
+    "macroRecall": 0.2041,
+    "macroF1": 0.1539,
+    "latencyMs": {
+      "average": 0.0066,
+      "p95": 0.0095
+    },
+    "perIntent": {
+      "TIMETABLE": {
+        "support": 28,
+        "precision": 1,
+        "recall": 0.0714,
+        "f1": 0.1333
+      },
+      "GRADES": {
+        "support": 28,
+        "precision": 0.7143,
+        "recall": 0.1786,
+        "f1": 0.2857
+      },
+      "COURSE_DISCOVERY": {
+        "support": 28,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0
+      },
+      "STUDY_PLAN": {
+        "support": 28,
+        "precision": 1,
+        "recall": 0.0714,
+        "f1": 0.1333
+      },
+      "SCHOOL_POLICY": {
+        "support": 28,
+        "precision": 1,
+        "recall": 0.0714,
+        "f1": 0.1333
+      },
+      "TRANSLATE": {
+        "support": 28,
+        "precision": 1,
+        "recall": 0.0714,
+        "f1": 0.1333
+      },
+      "GENERAL": {
+        "support": 28,
+        "precision": 0.1492,
+        "recall": 0.9643,
+        "f1": 0.2584
+      }
+    },
+    "confusion": {
+      "TIMETABLE": {
+        "TIMETABLE": 2,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 26
+      },
+      "GRADES": {
+        "TIMETABLE": 0,
+        "GRADES": 5,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 23
+      },
+      "COURSE_DISCOVERY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 28
+      },
+      "STUDY_PLAN": {
+        "TIMETABLE": 0,
+        "GRADES": 1,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 2,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 25
+      },
+      "SCHOOL_POLICY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 2,
+        "TRANSLATE": 0,
+        "GENERAL": 26
+      },
+      "TRANSLATE": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 2,
+        "GENERAL": 26
+      },
+      "GENERAL": {
+        "TIMETABLE": 0,
+        "GRADES": 1,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 27
+      }
+    },
+    "failures": [
+      {
+        "id": "tt-002",
+        "text": "我今天有哪些课？",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-003",
+        "text": "明天什么时候上课",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-004",
+        "text": "帮我列一下本周的课程安排",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-005",
+        "text": "下一节课几点开始？",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-006",
+        "text": "周三有课吗",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-007",
+        "text": "我这周哪天没有课",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-008",
+        "text": "今天的上课地点在哪里",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-009",
+        "text": "晚上有安排课程吗",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-010",
+        "text": "查询周末上课安排",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-011",
+        "text": "我的日程中有几节课",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-012",
+        "text": "今天第一节是什么课",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-013",
+        "text": "本周课程时间有没有冲突",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-014",
+        "text": "告诉我下次上课的时间和教室",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-015",
+        "text": "什么时候去上英语课",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-016",
+        "text": "周五下午的课程安排",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-017",
+        "text": "把我的一周上课时间整理一下",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-018",
+        "text": "我明早需要到学校吗",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-020",
+        "text": "What classes do I have today?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-021",
+        "text": "When does my next class start?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-022",
+        "text": "List tomorrow's lessons and rooms",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-023",
+        "text": "Do I have any class on Friday?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-024",
+        "text": "My schedule for the weekend",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-025",
+        "text": "Покажи моё расписание на неделю",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-026",
+        "text": "Какие занятия у меня сегодня?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-027",
+        "text": "Когда начинается следующий урок?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tt-028",
+        "text": "Есть ли у меня занятия в пятницу?",
+        "expected": "TIMETABLE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-002",
+        "text": "我这学期考了多少分",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-003",
+        "text": "帮我看看出勤率",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-004",
+        "text": "哪门课分数最低",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-005",
+        "text": "我的英语考试结果怎么样",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-006",
+        "text": "这学期有没有不及格的科目",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-008",
+        "text": "查看各科得分情况",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-009",
+        "text": "日语课的考核结果出来了吗",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-010",
+        "text": "我的缺勤情况严重吗",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-011",
+        "text": "本学期学业表现概览",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-013",
+        "text": "我拿到了多少学分",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-014",
+        "text": "考试分数和到课率一起给我",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-015",
+        "text": "为什么我的出勤只有八十分",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-017",
+        "text": "我最近学习表现如何",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-018",
+        "text": "这门课最终评价是什么",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-020",
+        "text": "What score did I get this term?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-021",
+        "text": "Which subject has my lowest mark?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-022",
+        "text": "How is my attendance rate?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-023",
+        "text": "Did I fail any course?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-024",
+        "text": "Give me an academic performance summary",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-025",
+        "text": "Покажи мои оценки",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-026",
+        "text": "Какой у меня средний балл?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-027",
+        "text": "Какая у меня посещаемость?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "gr-028",
+        "text": "Есть ли у меня неудовлетворительные оценки?",
+        "expected": "GRADES",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-001",
+        "text": "推荐适合零基础的英语课程",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-002",
+        "text": "有哪些日语班可以报名",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-003",
+        "text": "帮我找周末上课的俄语课",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-004",
+        "text": "我应该选择A1还是A2课程",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-005",
+        "text": "适合留学准备的德语班",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-006",
+        "text": "想练口语应该报什么课",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-007",
+        "text": "课程目录里有法语吗",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-008",
+        "text": "比较一下英语B1和B2",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-009",
+        "text": "晚上能上的语言课程有哪些",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-010",
+        "text": "给上班族推荐一个班",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-011",
+        "text": "我想准备JLPT N2该选哪门课",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-012",
+        "text": "哪个老师教西班牙语",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-013",
+        "text": "找一个初级韩语课程",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-014",
+        "text": "目前可以报名的课程",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-015",
+        "text": "有没有小班授课的英语课",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-016",
+        "text": "我没有基础，从哪门语言课开始好",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-017",
+        "text": "按级别筛选俄语课程",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-018",
+        "text": "哪门课最适合备考雅思",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-019",
+        "text": "Recommend a beginner English course",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-020",
+        "text": "What Japanese classes are available?",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-021",
+        "text": "Find me a weekend language class",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-022",
+        "text": "Which course is suitable for IELTS preparation?",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-023",
+        "text": "Compare the B1 and B2 English classes",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-024",
+        "text": "Do you offer beginner Korean?",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-025",
+        "text": "Посоветуй курс английского для начинающих",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-026",
+        "text": "Какие курсы японского доступны?",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-027",
+        "text": "Найди занятия по выходным",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "co-028",
+        "text": "Какой курс подходит для подготовки к IELTS?",
+        "expected": "COURSE_DISCOVERY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-002",
+        "text": "每天半小时英语应该怎么学",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-003",
+        "text": "给我安排一个俄语复习方案",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-004",
+        "text": "如何在三个月内提高口语",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-005",
+        "text": "雅思考试前两周怎么复习",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-006",
+        "text": "背单词总是忘记怎么办",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-007",
+        "text": "听力训练每天做什么",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-008",
+        "text": "零基础日语学习步骤",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-009",
+        "text": "工作日很忙，怎么安排学习时间",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-010",
+        "text": "根据我的成绩做个复习计划",
+        "expected": "STUDY_PLAN",
+        "predicted": "GRADES"
+      },
+      {
+        "id": "sp-011",
+        "text": "口语和听力如何搭配练习",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-012",
+        "text": "每周学习目标怎么设置",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-013",
+        "text": "为法语A2准备学习路线",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-014",
+        "text": "如何提高阅读速度",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-015",
+        "text": "写作能力太弱该怎么练",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-016",
+        "text": "给我一个可以执行的每日任务表",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-017",
+        "text": "期末前的备考安排",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-018",
+        "text": "怎样利用闪卡复习词汇",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-020",
+        "text": "How should I learn English for thirty minutes a day?",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-021",
+        "text": "Help me improve my speaking in three months",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-022",
+        "text": "What is the best way to review vocabulary?",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-023",
+        "text": "Make a revision schedule before my exam",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-024",
+        "text": "How can I practice listening every day?",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-025",
+        "text": "Составь план обучения на неделю",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-026",
+        "text": "Как улучшить разговорный английский?",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-027",
+        "text": "Как повторять слова каждый день?",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "sp-028",
+        "text": "Составь график подготовки к экзамену",
+        "expected": "STUDY_PLAN",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-002",
+        "text": "学费应该什么时候缴纳",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-003",
+        "text": "报名后可以退款吗",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-004",
+        "text": "新生体检需要什么材料",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-005",
+        "text": "学生保险是必须的吗",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-006",
+        "text": "学校主楼在哪里",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-007",
+        "text": "有哪些校园社团",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-008",
+        "text": "教室使用有什么规定",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-009",
+        "text": "宿舍晚上几点关门",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-010",
+        "text": "体育馆开放时间",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-011",
+        "text": "请假需要走什么流程",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-012",
+        "text": "迟到会受到什么处理",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-013",
+        "text": "课程取消后费用怎么办",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-014",
+        "text": "图书馆借阅规则",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-015",
+        "text": "校园设施周末开放吗",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-016",
+        "text": "合唱团怎么参加",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-017",
+        "text": "学员需要遵守哪些规定",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-018",
+        "text": "在哪里查看最新校内制度",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-020",
+        "text": "Is student insurance mandatory?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-021",
+        "text": "What documents are needed for the medical exam?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-022",
+        "text": "Where is the main campus building?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-023",
+        "text": "How can I join a student club?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-024",
+        "text": "What are the classroom rules?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-025",
+        "text": "Каковы правила возврата оплаты?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-026",
+        "text": "Обязательна ли студенческая страховка?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-027",
+        "text": "Где находится главный корпус?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "po-028",
+        "text": "Какие правила действуют в общежитии?",
+        "expected": "SCHOOL_POLICY",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-002",
+        "text": "你好用法语怎么说",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-003",
+        "text": "请将这句话译成英语",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-004",
+        "text": "“早上好”对应的日语是什么",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-005",
+        "text": "帮我翻一下这段俄文",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-006",
+        "text": "这个单词的中文意思",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-007",
+        "text": "如何用德语表达感谢",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-008",
+        "text": "给出这句话的中英文对照",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-009",
+        "text": "帮我解释bonjour是什么意思",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-010",
+        "text": "西班牙语的再见怎么讲",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-011",
+        "text": "把这封短信转成英文",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-012",
+        "text": "这个俄语句子怎么理解",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-013",
+        "text": "英语里怎么礼貌地问路",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-014",
+        "text": "请提供对应的法语表达",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-015",
+        "text": "把“我想报名”译成日文",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-016",
+        "text": "这句话翻成中文是什么",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-017",
+        "text": "给我三个双语例句",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-018",
+        "text": "这个短语在英语中如何表达",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-020",
+        "text": "How do you say thank you in Russian?",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-021",
+        "text": "What does bonjour mean in English?",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-022",
+        "text": "Give me the Japanese equivalent of good morning",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-023",
+        "text": "Convert this message to French",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-024",
+        "text": "Can you provide a bilingual example?",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-025",
+        "text": "Переведи это предложение на китайский",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-026",
+        "text": "Как сказать спасибо по-английски?",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-027",
+        "text": "Что означает слово hello?",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "tr-028",
+        "text": "Дай перевод этой фразы на французский",
+        "expected": "TRANSLATE",
+        "predicted": "GENERAL"
+      },
+      {
+        "id": "ge-014",
+        "text": "帮我修改成绩",
+        "expected": "GENERAL",
+        "predicted": "GRADES"
+      }
+    ]
+  },
+  "enhanced": {
+    "name": "openedu-intent-classifier",
+    "caseCount": 196,
+    "accuracy": 1,
+    "macroPrecision": 1,
+    "macroRecall": 1,
+    "macroF1": 1,
+    "latencyMs": {
+      "average": 0.0475,
+      "p95": 0.2048
+    },
+    "perIntent": {
+      "TIMETABLE": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "GRADES": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "COURSE_DISCOVERY": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "STUDY_PLAN": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "SCHOOL_POLICY": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "TRANSLATE": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "GENERAL": {
+        "support": 28,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      }
+    },
+    "confusion": {
+      "TIMETABLE": {
+        "TIMETABLE": 28,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "GRADES": {
+        "TIMETABLE": 0,
+        "GRADES": 28,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "COURSE_DISCOVERY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 28,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "STUDY_PLAN": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 28,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "SCHOOL_POLICY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 28,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "TRANSLATE": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 28,
+        "GENERAL": 0
+      },
+      "GENERAL": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 28
+      }
+    },
+    "failures": []
+  },
+  "contextual": {
+    "name": "openedu-context-resolver",
+    "caseCount": 14,
+    "accuracy": 1,
+    "macroPrecision": 1,
+    "macroRecall": 1,
+    "macroF1": 1,
+    "latencyMs": {
+      "average": 0.0307,
+      "p95": 0.2628
+    },
+    "perIntent": {
+      "TIMETABLE": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "GRADES": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "COURSE_DISCOVERY": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "STUDY_PLAN": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "SCHOOL_POLICY": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "TRANSLATE": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "GENERAL": {
+        "support": 2,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      }
+    },
+    "confusion": {
+      "TIMETABLE": {
+        "TIMETABLE": 2,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "GRADES": {
+        "TIMETABLE": 0,
+        "GRADES": 2,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "COURSE_DISCOVERY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 2,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "STUDY_PLAN": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 2,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "SCHOOL_POLICY": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 2,
+        "TRANSLATE": 0,
+        "GENERAL": 0
+      },
+      "TRANSLATE": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 2,
+        "GENERAL": 0
+      },
+      "GENERAL": {
+        "TIMETABLE": 0,
+        "GRADES": 0,
+        "COURSE_DISCOVERY": 0,
+        "STUDY_PLAN": 0,
+        "SCHOOL_POLICY": 0,
+        "TRANSLATE": 0,
+        "GENERAL": 2
+      }
+    },
+    "failures": []
+  }
+}

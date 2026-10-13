@@ -1,0 +1,4 @@
+method,cases,accuracy,macroPrecision,macroRecall,macroF1,averageLatencyMs,p95LatencyMs,datasetRole
+Keyword baseline,196,0.2041,0.6948,0.2041,0.1539,0.0095,0.0127,engineering-regression
+OpenEdu classifier,196,1,1,1,1,0.0795,0.408,engineering-regression
+Context resolver,14,1,1,1,1,0.0435,0.3359,engineering-regression

@@ -1,0 +1,202 @@
+OpenEdu 网站视频数据手动添加指南
+==================================
+
+本项目每门现有课程的精确匹配资源见项目根目录：
+  现有课程对应资源网址清单.txt
+
+适用范围
+--------
+本项目支持 4 种课程资源：
+1. local：本地 MP4/WebM，由网站播放器直接播放。
+2. youtube：填写 YouTube 完整链接或视频 ID，由网站嵌入播放。
+3. bilibili：填写 Bilibili 完整链接或 BV 号，由网站嵌入播放。
+4. external_link：填写以 http:// 或 https:// 开头的学习页面，由学生跳转查看。
+
+论文演示建议
+------------
+不要为了“数量多”给 20 门课程塞入来源不清或重复视频。优先完成一个可复核的小型数据集：
+
+- 3 门重点演示课程，每门 3 个视频：导学、核心讲解、练习/复习，共 9 个。
+- 其余 4 个语种各补 1 个 30-90 秒试听/文化样本，使 7 个语种都有可见内容。
+- 总计先准备 13 个视频，即可展示多语种目录、播放、学习进度与后台管理闭环。
+- 课程主体最好由本人录制屏幕/PPT 并配音；开放素材只作为片头、情境、文化或发音样本。
+
+一、准备视频
+------------
+推荐格式：MP4，H.264 视频编码，AAC 音频编码。
+推荐规格：1280×720、16:9、25/30 fps；单段 3-8 分钟、20-80 MB。
+文件名规则：只用小写英文字母、数字、短横线；不要用空格、中文、括号或 # ? %。
+
+示例文件名：
+  en/a1-greetings-01.mp4
+  en/a1-pronunciation-02.mp4
+  ru/a1-alphabet-01.mp4
+  fr/a1-self-introduction-01.mp4
+  ja/n5-hiragana-01.mp4
+  de/a1-greetings-01.mp4
+  es/a2-daily-conversation-01.mp4
+  ko/topik1-hangul-01.mp4
+
+二、复制到项目目录
+------------------
+1. 打开项目目录：C:\Users\USER\Desktop\YY\language
+2. 进入：frontend\public\videos
+3. 按语种复制到 en、ru、fr、ja、de、es、ko 子目录。
+4. 不要把视频放入 frontend\src，也不要把 C:\... 电脑路径填进后台。
+
+对应关系示例：
+  实际文件：C:\Users\USER\Desktop\YY\language\frontend\public\videos\en\a1-greetings-01.mp4
+  网站地址：http://localhost/videos/en/a1-greetings-01.mp4
+  后台填写：/videos/en/a1-greetings-01.mp4
+
+三、让 Docker 读取视频
+---------------------
+本项目已把 frontend/public/videos 挂载到前端容器。
+
+第一次应用本次配置：
+  cd C:\Users\USER\Desktop\YY\language
+  docker compose up -d --build frontend
+
+以后新增或替换视频：
+1. 把文件复制到 frontend\public\videos\对应语种目录。
+2. 浏览器打开 http://localhost/videos/语种/文件名.mp4 直接测试。
+3. 能播放就进入后台登记；一般不需要重新构建。
+4. 如果浏览器仍显示旧视频，按 Ctrl+F5 强制刷新。
+
+四、在后台添加到课程
+--------------------
+1. 打开 http://localhost/admin/login
+2. 本地演示默认管理员：
+   账号：admin@openedu.local
+   密码：change-me-admin-password
+3. 登录后进入“课程管理”。
+4. 找到目标课程，点击“编辑”。
+5. 在“资源列表”点击“新增资源”。
+6. 资源类型选择“local”。
+7. “来源 URL/ID”填写 /videos/en/a1-greetings-01.mp4 这类浏览器路径。
+8. 填写明确标题，例如“第 1 课：问候与自我介绍”。
+9. 保存资源；有多条资源时调整顺序并保存排序。
+10. 至少有 1 条学习资源后，勾选“学生端可见”并保存课程。
+
+如果是演示目录中的外部课程，先执行“复制到本地管理”，再编辑资源；不要直接修改远端演示目录。
+
+五、生成课程学习闭环
+--------------------
+1. 在课程编辑页点击“学习内容与批改”。
+2. 如果还是空白，使用页面上的“生成学习路线”。
+3. 系统会依据现有课程资源生成章节/课时，并带一份作业和测验。
+4. 检查每一课时是否指向正确视频，并修改标题、预计分钟数和顺序。
+5. 学生报名审核通过后，从课程详情进入“开始学习”。
+6. 验证视频播放、完成课时、提交作业、提交测验、管理员批改、学习进度更新。
+
+六、外部视频的正确填法
+----------------------
+YouTube：资源类型选 youtube，填完整 watch/youtu.be 链接或 11 位视频 ID。
+Bilibili：资源类型选 bilibili，填完整视频链接或 BV 号；不用 b23.tv 短链接。
+机构课程页：资源类型选 external_link，填完整 https:// 地址。
+
+注意：YouTube/Bilibili 视频只有在平台明确提供下载或作者另行授权时才可下载。
+一般课程演示应使用嵌入或外链，不要用第三方解析网站抓取。
+
+七、合法资源与搜索入口
+----------------------
+A. 可下载的通用教育/课堂素材（适合片头、背景、场景）
+
+Pexels 语言学习视频：
+  https://www.pexels.com/search/videos/language%20learning/
+Pexels 课堂视频：
+  https://www.pexels.com/search/videos/classroom/
+Pexels 授权说明：
+  https://www.pexels.com/license/
+
+可直接查看的候选片段（适合课程片头/平台介绍，不代替核心讲解）：
+  https://www.pexels.com/video/teacher-and-students-in-class-5427892/
+  https://www.pexels.com/video/students-and-teacher-in-classroom-5897655/
+  https://www.pexels.com/video/video-of-a-teacher-teaching-students-8342233/
+
+Pixabay 语言学习视频：
+  https://pixabay.com/videos/search/language%20learning/
+Pixabay 课堂视频：
+  https://pixabay.com/videos/search/classroom/
+Pixabay 授权说明：
+  https://pixabay.com/service/license-summary/
+
+使用方法：打开某个视频详情页，确认不是广告/第三方付费素材，选择 HD 或 720p 下载；保存详情页 URL、作者和授权截图。
+
+B. 可下载的真实语言与发音样本
+
+Wikimedia Commons 发音视频：
+  https://commons.wikimedia.org/wiki/Category:Videos_showing_pronunciation
+Wikitongues 多语种目录：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_by_language
+英语 Wikitongues：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_English
+法语 Wikitongues：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_French
+德语 Wikitongues：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_German
+西班牙语 Wikitongues：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_Spanish
+韩语 Wikitongues：
+  https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_Korean
+按语言浏览全部视频：
+  https://commons.wikimedia.org/wiki/Category:Videos_by_language
+复用与署名说明：
+  https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia/en
+
+使用方法：点进具体 File 页面，先看 License/许可，再下载 Original file/full resolution。
+Commons 每个文件许可可能不同；CC BY/CC BY-SA 通常必须署名和标注许可证，不能只写“来源于网络”。
+若下载的是 WebM/OGV，可直接先测试；兼容性不佳时再转为 MP4，并在登记表说明“格式转换”。
+
+C. Internet Archive（只选权利明确的条目）
+
+入口：https://archive.org/
+权利说明：https://help.archive.org/help/rights/
+建议搜索词：public domain language course、FSI language course、language pronunciation。
+
+使用方法：进入详情页检查 Rights & Access/Usage/Creative Commons 信息；只有明确为 Public Domain 或列出可复用许可证时才下载。Internet Archive 是托管平台，不代表每个条目都自动可自由使用。
+
+D. 官方教学机构资源（建议外链/嵌入，不下载）
+
+可搜索并链接：British Council LearnEnglish、Goethe-Institut、Instituto Cervantes、TV5MONDE Apprendre、NHK World Easy Japanese、King Sejong Institute。
+这些资源适合在项目中作为 external_link，或使用其官方 YouTube 视频作为 youtube 类型。除非详情页明确授权，不要复制到本地。
+
+八、每个资源必须留下的答辩证据
+------------------------------
+在项目根目录“视频资源来源登记模板.txt”中登记：
+- 具体详情页 URL，而不是搜索结果页；
+- 作者/上传者、许可证名称、下载日期；
+- 本地文件名、课程与章节；
+- 授权页截图和资源详情页截图；
+- 是否剪辑、配字幕、转码。
+
+建议把截图放在论文证据目录中，例如：
+  thesis-evidence/video-licenses/VID-001-license.png
+  thesis-evidence/video-licenses/VID-001-source.png
+
+九、学生端验收清单
+------------------
+未登录访客：能看到已发布课程和资源预览，不应看到个人进度。
+已登录未报名学生：课程详情正常，学习空间应提示先报名/无权限。
+已报名且审核通过学生：能进入 /learn/课程ID，播放视频并记录完成状态。
+管理员：能增删资源、排序、发布课程、生成学习路线、查看作业并批改。
+
+逐条验证：
+[ ] 直接打开 /videos/... 返回视频，不是网站首页。
+[ ] 播放/暂停有响应。
+[ ] 拖动进度条能继续播放。
+[ ] 全屏正常，声音正常。
+[ ] 资源标题、顺序、语种正确。
+[ ] 完成课时后总体进度变化。
+[ ] 无效视频路径显示 404，不误显示首页。
+[ ] 切换中文/英文/俄文后页面按钮与提示仍正常。
+
+十、常见错误
+------------
+1. 填了 C:\Users\...：浏览器不能读取管理员电脑路径；改为 /videos/...。
+2. 404：检查文件名大小写、扩展名和语种目录是否一致。
+3. 有画面没声音/无法拖动：转换为 H.264 + AAC 的 MP4。
+4. 视频太大：压到 720p 并按章节拆分，答辩演示不要使用数百 MB 的单文件。
+5. 后台保存但学生看不到：课程可能仍是草稿，或学生报名尚未审核通过。
+6. 外链被拒绝嵌入：改为 external_link，让学生在新页面打开。
+7. 更换同名文件仍显示旧内容：Ctrl+F5，或改一个新文件名再更新后台路径。

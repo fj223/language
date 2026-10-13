@@ -1,0 +1,7 @@
+validation,category,status,durationMs,command,evidence
+RBAC and enrollment state rules,Automated contract,PASS,795.47,C:\Program Files\nodejs\node.exe scripts/test-domain-rules.mjs,domain rules: RBAC matrix and enrollment state transitions passed
+Chatbot intent contract,Automated contract,PASS,653.22,C:\Program Files\nodejs\node.exe scripts/test-chatbot-intents.mjs,chatbot intent contract: 17 cases and signed feedback ids passed
+Multilingual content localization,Automated contract,PASS,512.37,C:\Program Files\nodejs\node.exe scripts/test-content-localization.mjs,"content localization contract: course, timetable, grade, fallback, and override cases passed"
+Education API retry and telemetry,Automated contract,PASS,1014.24,C:\Program Files\nodejs\node.exe scripts/test-education-data-integration.mjs,[education-data] retrying external request path=/students/student-1/timetable attempt=2 | [education-data] external request failed path=/students/student-1/grades reason=HTTP 401
+Student and administrator business workflow,End-to-end workflow,PASS,5737.05,C:\Program Files\nodejs\node.exe scripts/test-business-workflow.mjs,"business workflow e2e: identity permissions, favorites, reminders and enrollment lifecycle passed"
+Intent evaluation thresholds,Experiment,PASS,497.63,C:\Program Files\nodejs\node.exe scripts/evaluate-chatbot.mjs --write,context: accuracy=1 macroF1=1 | report: evaluation\results\intent-evaluation-v1.json

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenEdu 实验与答辩证据</title>
+<style>
+body{font-family:Inter,"Microsoft YaHei",sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
+main{max-width:1100px;margin:0 auto;padding:36px 24px 60px}.hero{background:linear-gradient(135deg,#1e3a8a,#0f766e);color:white;padding:32px;border-radius:22px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}.card,section{background:white;border-radius:16px;padding:20px;box-shadow:0 8px 30px #0f172a0d}
+.kpi{font-size:32px;font-weight:800;margin:8px 0}.muted{color:#64748b}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid #e2e8f0}
+.pass{color:#047857;font-weight:700}.fail{color:#be123c;font-weight:700}.warning{background:#fffbeb;border-left:5px solid #f59e0b}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<div class="hero"><p>OpenEdu · Reproducible Evidence</p><h1>论文实验与答辩证据报告</h1><p>运行编号 2026-07-29T12-14-14-481Z</p></div>
+<div class="grid">
+<div class="card"><span class="muted">数据集</span><div class="kpi">210</div><span>工程回归样例</span></div>
+<div class="card"><span class="muted">OpenEdu Accuracy</span><div class="kpi">100.00%</div><span>版本化回归集</span></div>
+<div class="card"><span class="muted">验证通过</span><div class="kpi">6/6</div><span>自动化证据项</span></div>
+</div>
+<section><h2>模型对比</h2><img src="model-comparison.svg" alt="模型准确率对比" style="max-width:100%"></section>
+<section><h2>业务与工程验证</h2><table><thead><tr><th>验证项</th><th>分类</th><th>状态</th><th>耗时/ms</th></tr></thead><tbody>
+<tr><td>RBAC and enrollment state rules</td><td>Automated contract</td><td class="pass">PASS</td><td>795.47</td></tr><tr><td>Chatbot intent contract</td><td>Automated contract</td><td class="pass">PASS</td><td>653.22</td></tr><tr><td>Multilingual content localization</td><td>Automated contract</td><td class="pass">PASS</td><td>512.37</td></tr><tr><td>Education API retry and telemetry</td><td>Automated contract</td><td class="pass">PASS</td><td>1014.24</td></tr><tr><td>Student and administrator business workflow</td><td>End-to-end workflow</td><td class="pass">PASS</td><td>5737.05</td></tr><tr><td>Intent evaluation thresholds</td><td>Experiment</td><td class="pass">PASS</td><td>497.63</td></tr>
+</tbody></table></section>
+<section class="warning"><h2>论文使用边界</h2><p>当前数据集参与过工程迭代，只能作为版本化回归证据。最终论文仍需使用冻结代码后的独立人工标注留出集。</p></section>
+</main></body></html>

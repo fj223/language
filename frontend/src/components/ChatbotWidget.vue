@@ -105,9 +105,59 @@
                 />
               </div>
 
+              <div
+                v-if="msg.role === 'bot' && !msg.thinking && msg.cards?.length"
+                class="grid gap-2 pt-1"
+              >
+                <article
+                  v-for="card in msg.cards"
+                  :key="card.id"
+                  class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <div>
+                      <p class="text-xs font-bold leading-snug text-slate-800">{{ card.title }}</p>
+                      <p class="mt-1 text-[10px] text-slate-500">{{ card.teacher }}</p>
+                    </div>
+                    <span class="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
+                      {{ card.level }}
+                    </span>
+                  </div>
+                  <div class="mt-2 flex items-start gap-1.5 text-[10px] leading-relaxed text-slate-500">
+                    <span class="material-symbols-outlined text-xs text-indigo-400" aria-hidden="true">schedule</span>
+                    <span>{{ card.schedule }}</span>
+                  </div>
+                  <p class="mt-1 text-[10px] font-semibold text-slate-400">{{ card.language }}</p>
+                </article>
+              </div>
+
+              <div
+                v-if="msg.role === 'bot' && !msg.thinking && msg.sources?.length"
+                class="flex flex-wrap items-center gap-1 px-1 text-[10px] text-slate-400"
+              >
+                <span class="material-symbols-outlined text-xs" aria-hidden="true">verified</span>
+                <span>{{ $t('chatbot.sources') }}：{{ msg.sources.join(' · ') }}</span>
+              </div>
+
+              <div
+                v-if="msg.role === 'bot' && !msg.thinking && msg.suggestions?.length"
+                class="flex flex-wrap gap-1.5 pt-1"
+              >
+                <button
+                  v-for="suggestion in msg.suggestions"
+                  :key="suggestion"
+                  type="button"
+                  class="rounded-full border border-indigo-100 bg-white px-2.5 py-1 text-left text-[11px] text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                  :disabled="loading"
+                  @click="sendQuick(suggestion)"
+                >
+                  {{ suggestion }}
+                </button>
+              </div>
+
               <!-- Flashcard extraction button (bot messages only, not thinking, has content) -->
               <button
-                v-if="msg.role === 'bot' && !msg.thinking && msg.content"
+                v-if="msg.role === 'bot' && !msg.thinking && msg.content && flashcardGenerationEnabled"
                 class="flex items-center gap-1 text-[11px] transition-colors py-0.5 px-1.5 rounded-md self-start"
                 :class="msg.isFlashcardGenerated
                   ? 'text-green-500 cursor-default'
@@ -119,8 +169,39 @@
                   <path v-if="msg.isFlashcardGenerated" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   <path v-else d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
                 </svg>
-                {{ msg.isFlashcardGenerated ? '已生成卡片' : extractingIdx === idx ? '提取中…' : '提取卡片' }}
+                {{ msg.isFlashcardGenerated ? $t('chatbot.cardGenerated') : extractingIdx === idx ? $t('chatbot.extracting') : $t('chatbot.extractCard') }}
               </button>
+
+              <div
+                v-if="msg.role === 'bot' && !msg.thinking && msg.responseId"
+                class="flex items-center gap-1.5 px-1 text-[10px] text-slate-400"
+              >
+                <span>{{ msg.feedback ? $t('chatbot.feedbackThanks') : $t('chatbot.feedbackQuestion') }}</span>
+                <button
+                  type="button"
+                  class="grid h-6 w-6 place-items-center rounded-full transition"
+                  :class="msg.feedback === 'helpful'
+                    ? 'bg-emerald-100 text-emerald-600'
+                    : 'hover:bg-emerald-50 hover:text-emerald-600'"
+                  :disabled="msg.feedbackLoading"
+                  :aria-label="$t('chatbot.helpful')"
+                  @click="handleFeedback(msg, 'helpful')"
+                >
+                  <span class="material-symbols-outlined text-sm" aria-hidden="true">thumb_up</span>
+                </button>
+                <button
+                  type="button"
+                  class="grid h-6 w-6 place-items-center rounded-full transition"
+                  :class="msg.feedback === 'unhelpful'
+                    ? 'bg-rose-100 text-rose-600'
+                    : 'hover:bg-rose-50 hover:text-rose-600'"
+                  :disabled="msg.feedbackLoading"
+                  :aria-label="$t('chatbot.unhelpful')"
+                  @click="handleFeedback(msg, 'unhelpful')"
+                >
+                  <span class="material-symbols-outlined text-sm" aria-hidden="true">thumb_down</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -136,6 +217,13 @@
             {{ q }}
           </button>
         </div>
+        <p
+          v-if="showQuickReplies && capabilitiesLoaded && !flashcardGenerationEnabled"
+          class="mx-3 mb-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-700"
+          role="status"
+        >
+          {{ $t('chatbot.aiUnavailable') }}
+        </p>
 
         <!-- Input area -->
         <div class="px-3 pb-3 pt-2 border-t border-slate-100 flex-shrink-0">
@@ -236,7 +324,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, computed, watch } from 'vue'
+import { nextTick, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useI18n } from 'vue-i18n'
@@ -254,6 +342,13 @@ interface BotMessage {
   content: string
   thinking?: boolean
   isFlashcardGenerated?: boolean
+  suggestions?: string[]
+  sources?: string[]
+  responseId?: string
+  intent?: string
+  feedback?: 'helpful' | 'unhelpful'
+  feedbackLoading?: boolean
+  cards?: CourseAssistantCard[]
 }
 interface UserMessage {
   role: 'user'
@@ -261,12 +356,22 @@ interface UserMessage {
 }
 type Message = BotMessage | UserMessage
 
+interface CourseAssistantCard {
+  type: 'course'
+  id: string
+  title: string
+  language: string
+  level: string
+  teacher: string
+  schedule: string
+}
+
 // ============================================================
 // Auth state
 // ============================================================
 
 const { isLoggedIn, studentId, studentName } = useStudentAuth()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // ============================================================
 // Config
@@ -275,8 +380,9 @@ const { t } = useI18n()
 const QUICK_REPLIES = computed(() => [
   t('chatbot.quickSchedule'),
   t('chatbot.quickGrade'),
-  t('chatbot.quickTranslate1'),
-  t('chatbot.quickTranslate2'),
+  t('chatbot.quickCourse'),
+  t('chatbot.quickPlan'),
+  t('chatbot.quickCampus'),
 ])
 
 /** 欢迎语：根据登录状态动态生成 */
@@ -284,20 +390,20 @@ function buildWelcomeMsg(): BotMessage {
   if (isLoggedIn.value && studentName.value) {
     return {
       role: 'bot',
-      content: `您好，**${studentName.value}**！我是新言语言学校智能助手 🎓\n\n我可以帮您：\n- 📅 ${t('chatbot.quickSchedule')}\n- 📊 ${t('chatbot.quickGrade')}\n- 🌐 ${t('chatbot.quickTranslate1').replace('翻译：', '')} / ${t('chatbot.quickTranslate2').replace('翻译：', '')} 词汇翻译\n\n请问有什么可以帮您？`,
+      content: t('chatbot.welcomeSignedIn', { name: studentName.value }),
     }
   }
   return {
     role: 'bot',
-    content: `您好！我是新言语言学校智能助手 🎓\n\n我可以帮您：\n- 📅 ${t('chatbot.quickSchedule')}\n- 📊 ${t('chatbot.quickGrade')}\n- 🌐 ${t('chatbot.quickTranslate1').replace('翻译：', '')} / ${t('chatbot.quickTranslate2').replace('翻译：', '')} 词汇翻译\n\n请问有什么可以帮您？`,
+    content: t('chatbot.welcomeGuest'),
   }
 }
 
 /** 未登录提示消息 */
-const NOT_LOGGED_IN_MSG: BotMessage = {
+const notLoggedInMessage = computed<BotMessage>(() => ({
   role: 'bot',
-  content: '⚠️ **您好，请先登录后再查询个人教务信息。**\n\n登录后即可查询课表、成绩等个人数据。\n\n您也可以直接向我提问语言学习相关问题，无需登录。',
-}
+  content: t('chatbot.loginRequired'),
+}))
 
 // ============================================================
 // State
@@ -313,6 +419,8 @@ const unreadCount = ref(0)
 
 // --- Flashcard state ---
 const extractingIdx = ref<number | null>(null)
+const capabilitiesLoaded = ref(false)
+const flashcardGenerationEnabled = ref(false)
 
 /** 仅在只有欢迎语时显示快捷回复 */
 const showQuickReplies = computed(() => messages.value.length === 1 && !loading.value)
@@ -321,6 +429,10 @@ const showQuickReplies = computed(() => messages.value.length === 1 && !loading.
 watch(isLoggedIn, () => {
   messages.value = [buildWelcomeMsg()]
   unreadCount.value = 0
+})
+
+watch(locale, () => {
+  if (messages.value.length === 1) messages.value = [buildWelcomeMsg()]
 })
 
 // ============================================================
@@ -397,7 +509,7 @@ async function handleGenerateCard(idx: number) {
   try {
     const card = await generateFlashcard(content)
     if (!card) {
-      ElMessage.error('知识提取失败，请重试')
+      ElMessage.error(t('chatbot.extractFailed'))
       return
     }
 
@@ -411,11 +523,56 @@ async function handleGenerateCard(idx: number) {
 
     const botMsg = messages.value[idx] as BotMessage
     botMsg.isFlashcardGenerated = true
-    ElMessage.success(`知识卡片【${card.term}】已保存！`)
+    ElMessage.success(t('chatbot.cardSaved', { term: card.term }))
   } catch (e) {
-    ElMessage.error('生成失败：' + (e instanceof Error ? e.message : '未知错误'))
+    ElMessage.error(t('chatbot.generateFailed', {
+      reason: e instanceof Error ? e.message : t('chatbot.unknownError'),
+    }))
   } finally {
     extractingIdx.value = null
+  }
+}
+
+function openFromPage(event: Event) {
+  const detail = (event as CustomEvent<{ prompt?: string }>).detail
+  if (detail?.prompt) inputText.value = detail.prompt
+  open()
+}
+
+async function loadCapabilities() {
+  try {
+    const response = await http.get<{
+      ok: boolean
+      data: { flashcardGenerationEnabled: boolean }
+    }>('/api/chatbot/capabilities')
+    flashcardGenerationEnabled.value = Boolean(response.data.data?.flashcardGenerationEnabled)
+  } catch {
+    flashcardGenerationEnabled.value = false
+  } finally {
+    capabilitiesLoaded.value = true
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('open-openedu-chatbot', openFromPage)
+  void loadCapabilities()
+})
+onUnmounted(() => window.removeEventListener('open-openedu-chatbot', openFromPage))
+
+async function handleFeedback(message: BotMessage, rating: 'helpful' | 'unhelpful') {
+  if (!message.responseId || !message.intent || message.feedbackLoading) return
+  message.feedbackLoading = true
+  try {
+    await http.post('/api/chatbot/feedback', {
+      responseId: message.responseId,
+      intent: message.intent,
+      rating,
+    })
+    message.feedback = rating
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : t('chatbot.feedbackFailed'))
+  } finally {
+    message.feedbackLoading = false
   }
 }
 
@@ -426,7 +583,7 @@ async function handleGenerateCard(idx: number) {
 // 与后端保持一致：必须有明确的"查询/我的"意图前缀才视为数据查询，
 // 避免泛义词（"上课"、"分数"）误拦截知识库闲聊。
 const DATA_QUERY_PATTERN =
-  /(?:查|看|查询|查看|查一下|帮我查)(?:.*?)(?:课表|日程|我的课|本周课|今天的课|明天的课|成绩|分数|学分)|我的课表|本周课表|今天有(?:哪些|什么)课|明天有(?:哪些|什么)课|下节课(?:是|有)|我的成绩|我的分数|我的学分|考了多少分|考得怎样|考试结果|挂科了|及格了吗|不及格/
+  /(?:查|看|查询|查看|查一下|帮我查)(?:.*?)(?:课表|日程|我的课|本周课|今天的课|明天的课|成绩|分数|学分)|我的课表|本周课表|今天有(?:哪些|什么)课|明天有(?:哪些|什么)课|下节课(?:是|有)|我的成绩|我的分数|我的学分|考了多少分|考得怎样|考试结果|挂科了|及格了吗|不及格|(?:my|show|check|view).*(?:schedule|timetable|grades?|scores?|attendance)|(?:мо[её]|покажи|проверь).*(?:расписани|оценк|посещаемост)/i
 
 /** 是否是需要登录才能查询的数据意图 */
 function isDataQueryIntent(text: string): boolean {
@@ -447,11 +604,20 @@ async function send() {
     inputText.value = ''
     resetTextarea()
     await scrollBottom()
-    messages.value.push({ ...NOT_LOGGED_IN_MSG })
+    messages.value.push({ ...notLoggedInMessage.value })
     await scrollBottom()
     if (!isOpen.value) unreadCount.value++
     return
   }
+
+  const history = messages.value
+    .slice(1)
+    .filter((message) => !('thinking' in message) || !message.thinking)
+    .slice(-6)
+    .map((message) => ({
+      role: message.role === 'bot' ? 'assistant' as const : 'user' as const,
+      content: message.content,
+    }))
 
   // Push user bubble
   messages.value.push({ role: 'user', content: text })
@@ -469,9 +635,20 @@ async function send() {
   try {
     const { data } = await http.post<{
       ok: boolean
-      data: { reply: string; intent: string; studentId: string }
+      data: {
+        reply: string
+        intent: string
+        studentId: string
+        suggestions?: string[]
+        sources?: string[]
+        aiUsed?: boolean
+        responseId?: string
+        cards?: CourseAssistantCard[]
+      }
     }>('/api/chatbot', {
       message: text,
+      history,
+      locale: locale.value,
       // 已登录时传真实 studentId，未登录时传空字符串（后端 FALLBACK 意图不需要 studentId）
       studentId: studentId.value ?? '',
     }, {
@@ -480,15 +657,22 @@ async function send() {
 
     messages.value[thinkingIdx] = {
       role: 'bot',
-      content: data.data?.reply ?? '抱歉，暂时无法处理您的请求，请稍后再试。',
+      content: data.data?.reply ?? t('chatbot.unavailable'),
       thinking: false,
+      suggestions: data.data?.suggestions ?? [],
+      sources: data.data?.sources ?? [],
+      responseId: data.data?.responseId,
+      intent: data.data?.intent,
+      cards: data.data?.cards ?? [],
     }
 
     if (!isOpen.value) unreadCount.value++
   } catch (err) {
     messages.value[thinkingIdx] = {
       role: 'bot',
-      content: `**请求失败**：${err instanceof Error ? err.message : '网络错误，请稍后重试'}`,
+      content: t('chatbot.requestFailed', {
+        reason: err instanceof Error ? err.message : t('chatbot.networkError'),
+      }),
       thinking: false,
     }
   } finally {
@@ -509,21 +693,21 @@ async function sendQuick(text: string) {
 
 // 检测浏览器是否支持 Web Speech API
 const SpeechRecognitionCtor =
-  (window as unknown as { SpeechRecognition?: new () => SpeechRecognition })
+  (window as unknown as { SpeechRecognition?: new () => any })
     .SpeechRecognition ??
-  (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognition })
+  (window as unknown as { webkitSpeechRecognition?: new () => any })
     .webkitSpeechRecognition ??
   null
 
 const speechSupported = ref(!!SpeechRecognitionCtor)
 const isListening = ref(false)
 
-let recognition: SpeechRecognition | null = null
+let recognition: any = null
 
 function toggleSpeech() {
   if (!SpeechRecognitionCtor) {
     // 理论上按钮已隐藏，这里作为双重保险
-    alert('当前浏览器不支持语音输入，请使用 Chrome 或 Edge。')
+    ElMessage.warning(t('chatbot.speechUnsupported'))
     return
   }
 
@@ -535,7 +719,7 @@ function toggleSpeech() {
 
   // 初始化并启动
   recognition = new SpeechRecognitionCtor()
-  recognition.lang = 'zh-CN'       // 默认中文，可根据语言 store 动态切换
+  recognition.lang = locale.value === 'ru' ? 'ru-RU' : locale.value === 'en' ? 'en-US' : 'zh-CN'
   recognition.interimResults = true // 实时显示中间结果
   recognition.maxAlternatives = 1
   recognition.continuous = false
@@ -544,7 +728,7 @@ function toggleSpeech() {
     isListening.value = true
   }
 
-  recognition.onresult = (event: SpeechRecognitionEvent) => {
+  recognition.onresult = (event: any) => {
     // 取最后一个结果（最终结果优先，否则取中间结果）
     const results = event.results
     const last = results[results.length - 1]
@@ -562,11 +746,11 @@ function toggleSpeech() {
     }
   }
 
-  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  recognition.onerror = (event: any) => {
     console.warn('[speech] error:', event.error)
     isListening.value = false
     if (event.error === 'not-allowed') {
-      alert('麦克风权限被拒绝，请在浏览器设置中允许访问麦克风。')
+      ElMessage.warning(t('chatbot.microphoneDenied'))
     }
   }
 

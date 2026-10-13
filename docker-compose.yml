@@ -9,7 +9,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3406:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
@@ -30,16 +30,31 @@ services:
       PORT: ${PORT:-3000}
       NODE_ENV: ${NODE_ENV:-production}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      ADMIN_TOKEN: ${ADMIN_TOKEN:-change-me-to-a-strong-secret}
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-strong-jwt-secret}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-your-api-key-here}
-      AI_BASE_URL: ${AI_BASE_URL:-https://api.siliconflow.cn/v1}
-      AI_MODEL: ${AI_MODEL:-deepseek-ai/DeepSeek-V3}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-change-me-to-a-strong-admin-jwt-secret}
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@openedu.local}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-change-me-admin-password}
+      ADMIN_BOOTSTRAP_NAME: ${ADMIN_BOOTSTRAP_NAME:-系统管理员}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_MODEL: ${AI_MODEL:-}
+      EDU_DATA_PROVIDER: ${EDU_DATA_PROVIDER:-mock}
+      EDU_API_BASE_URL: ${EDU_API_BASE_URL:-}
+      EDU_API_KEY: ${EDU_API_KEY:-}
+      EDU_API_TIMEOUT_MS: ${EDU_API_TIMEOUT_MS:-8000}
+      EDU_API_RETRY_COUNT: ${EDU_API_RETRY_COUNT:-1}
     depends_on:
       mysql:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "3100:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
     networks:
       - openedu-net
 
@@ -50,9 +65,19 @@ services:
     container_name: openedu-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
+    # Keep manually supplied course videos outside the image. Files added to
+    # frontend/public/videos become available at /videos immediately.
+    volumes:
+      - ./frontend/public/videos:/usr/share/nginx/html/videos:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
     networks:
       - openedu-net
 

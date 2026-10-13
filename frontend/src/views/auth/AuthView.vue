@@ -1,5 +1,8 @@
 <template>
   <main class="flex-grow flex flex-col md:flex-row min-h-screen">
+    <div class="fixed right-4 top-4 z-50 rounded-xl bg-white/90 shadow-sm backdrop-blur">
+      <LanguageSwitcher />
+    </div>
     <!-- Left Column: Branding & Promotion -->
     <section class="hidden md:flex md:w-5/12 lg:w-1/2 relative bg-primary items-center justify-center p-12 overflow-hidden">
       <!-- Decorative Background Elements -->
@@ -13,10 +16,10 @@
           <span class="text-white font-headline font-bold tracking-tight text-xl">OpenEdu</span>
         </div>
         <h1 class="text-white text-5xl lg:text-6xl font-headline font-extrabold leading-tight mb-6">
-          OpenEdu：<br/><span class="text-primary-container">无边界学习</span>
+          OpenEdu<br/><span class="text-primary-container">{{ $t('auth.heroTitle') }}</span>
         </h1>
         <p class="text-on-primary/80 text-lg font-body leading-relaxed mb-12 max-w-md">
-          加入我们，开启全网免费精品资源学习之旅。我们致力于打破知识围墙，让教育公平惠及每一个人。
+          {{ $t('auth.heroDescription') }}
         </p>
         <!-- Visual Element: Abstract Card or Illustration -->
         <div class="relative group">
@@ -27,8 +30,8 @@
                 <span class="material-symbols-outlined text-primary">auto_awesome</span>
               </div>
               <div>
-                <h3 class="text-white font-headline font-semibold">智慧推荐系统</h3>
-                <p class="text-on-primary/60 text-sm">为你量身定制学习路径</p>
+                <h3 class="text-white font-headline font-semibold">{{ $t('auth.serviceTitle') }}</h3>
+                <p class="text-on-primary/60 text-sm">{{ $t('auth.serviceDescription') }}</p>
               </div>
             </div>
             <div class="space-y-3">
@@ -52,6 +55,9 @@
         <span class="text-primary font-headline font-bold text-2xl tracking-tight">OpenEdu</span>
       </div>
       <div class="w-full max-w-md">
+        <div v-if="route.query.reason === 'expired'" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
+          {{ $t('auth.sessionExpired') }}
+        </div>
         <!-- Tabs Container -->
         <div class="bg-surface-container-low p-1 rounded-xl mb-10 flex space-x-1">
           <button
@@ -61,7 +67,7 @@
               isLogin ? 'bg-surface-container-lowest text-primary shadow-sm font-bold' : 'text-on-surface-variant font-medium hover:text-on-surface'
             ]"
           >
-            登录
+            {{ $t('auth.loginTab') }}
           </button>
           <button
             @click="isLogin = false"
@@ -70,7 +76,7 @@
               !isLogin ? 'bg-surface-container-lowest text-primary shadow-sm font-bold' : 'text-on-surface-variant font-medium hover:text-on-surface'
             ]"
           >
-            免费注册
+            {{ $t('auth.registerTab') }}
           </button>
         </div>
 
@@ -79,8 +85,8 @@
           <!-- Login Form -->
           <div v-if="isLogin">
             <header class="mb-8">
-              <h2 class="text-2xl font-headline font-bold text-on-surface">欢迎回来</h2>
-              <p class="text-on-surface-variant text-sm mt-2">请登录您的账户以继续学习</p>
+              <h2 class="text-2xl font-headline font-bold text-on-surface">{{ $t('auth.welcomeBack') }}</h2>
+              <p class="text-on-surface-variant text-sm mt-2">{{ $t('auth.loginDescription') }}</p>
             </header>
             <form class="space-y-6" @submit.prevent="handleLogin">
               <!-- Error banner -->
@@ -93,7 +99,7 @@
                 <span>{{ loginError }}</span>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">邮箱地址</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">{{ $t('auth.email') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
                   <input
@@ -108,7 +114,7 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">密码</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">{{ $t('auth.password') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
                   <input
@@ -122,12 +128,9 @@
                   />
                 </div>
               </div>
-              <div class="flex items-center justify-between">
-                <label class="flex items-center space-x-2 cursor-pointer group">
-                  <input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 transition-all" type="checkbox"/>
-                  <span class="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">记住我</span>
-                </label>
-                <a class="text-sm font-medium text-primary hover:text-primary-dim transition-colors" href="#">忘记密码？</a>
+              <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-base text-primary" aria-hidden="true">shield_lock</span>
+                {{ $t('auth.localSession') }}
               </div>
               <button
                 class="w-full bg-primary hover:bg-primary-dim text-on-primary font-headline font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
@@ -135,7 +138,7 @@
                 :disabled="submitting"
               >
                 <span v-if="submitting" class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
-                <span>{{ submitting ? '登录中…' : '立即登录' }}</span>
+                <span>{{ submitting ? $t('auth.loggingIn') : $t('auth.loginNow') }}</span>
                 <span v-if="!submitting" class="material-symbols-outlined text-lg">arrow_forward</span>
               </button>
             </form>
@@ -144,8 +147,8 @@
           <!-- Register Form -->
           <div v-else>
             <header class="mb-8">
-              <h2 class="text-2xl font-headline font-bold text-on-surface">创建新账户</h2>
-              <p class="text-on-surface-variant text-sm mt-2">开启您的终身学习之旅</p>
+              <h2 class="text-2xl font-headline font-bold text-on-surface">{{ $t('auth.createAccount') }}</h2>
+              <p class="text-on-surface-variant text-sm mt-2">{{ $t('auth.registerDescription') }}</p>
             </header>
             <form class="space-y-5" @submit.prevent="handleRegister">
               <!-- Error banner -->
@@ -158,13 +161,13 @@
                 <span>{{ registerError }}</span>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">用户名</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">{{ $t('auth.name') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">person</span>
                   <input
                     v-model="registerName"
                     class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
-                    placeholder="学习先行者"
+                    :placeholder="$t('auth.namePlaceholder')"
                     type="text"
                     required
                     :disabled="submitting"
@@ -172,7 +175,7 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">邮箱地址</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">{{ $t('auth.email') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
                   <input
@@ -187,13 +190,13 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">设置密码</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">{{ $t('auth.setPassword') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
                   <input
                     v-model="registerPassword"
                     class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
-                    placeholder="至少6位字符"
+                    :placeholder="$t('auth.passwordPlaceholder')"
                     type="password"
                     autocomplete="new-password"
                     required
@@ -202,13 +205,13 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">确认密码</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">{{ $t('auth.confirmPassword') }}</label>
                 <div class="relative group">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">verified_user</span>
                   <input
                     v-model="registerConfirmPassword"
                     class="w-full pl-12 pr-4 py-3 bg-surface-container-high border-none rounded-lg font-body text-on-surface placeholder:text-outline/60 focus:ring-0 transition-all"
-                    placeholder="再次输入密码"
+                    :placeholder="$t('auth.confirmPasswordPlaceholder')"
                     type="password"
                     autocomplete="new-password"
                     required
@@ -221,32 +224,19 @@
                 type="submit"
                 :disabled="submitting"
               >
-                {{ submitting ? '注册中…' : '立即注册' }}
+                {{ submitting ? $t('auth.registering') : $t('auth.registerNow') }}
               </button>
               <p class="text-center text-[10px] sm:text-xs text-on-surface-variant leading-relaxed px-4">
-                注册即代表同意《OpenEdu 公益服务协议》和《用户隐私政策》。我们将保护您的数据安全。
+                {{ $t('auth.agreement') }}
               </p>
             </form>
           </div>
         </div>
 
-        <!-- Alternative Entry Points -->
-        <div class="mt-10 flex items-center justify-center space-x-6 text-on-surface-variant">
-          <span class="h-px w-12 bg-outline-variant/30"></span>
-          <span class="text-xs uppercase tracking-widest font-bold">第三方登录</span>
-          <span class="h-px w-12 bg-outline-variant/30"></span>
-        </div>
-        <div class="mt-6 flex justify-center space-x-4">
-          <button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
-            <img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2dpzVZ362Rd8nCYnGL4z4XuzXWEEnw-R74ATeQ2qz5j18Oe_Rul06x9ZqD0-nSEzOqcj0zHCb8Uqubv9QydDqj3xrZOnWCL1n-D9vMlLN7-fn3-hO5D1YTM0lAjYHXuE5SdW8ZugdYvCloU5mClerHRCsI0zcibPGYg0xaPdMnNJM0FlwRTgaa6f_1SxaGtmUJvDImrB6vBMDljY9lwOv8I39D8naBY2kVvttuLIKghKdE5PjGRJI53jMF6PTIbHFpjG34ONDtYk"/>
-          </button>
-          <button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
-            <img alt="GitHub" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEyRL-67Sl89uBBDjNK_NW7r3fDwNAlYJz3qnv1PHvnGAe_xoRO3CYjsVUnLMfxUjHLSHkklKN_d36zaeXhNn_zBnxtGIkmvgSiUoueJtXxMCu-zwwMJE7Ux1COc-wDghlTi_De3vUSOYgTDJPBdEQ7OHz_0AIF0qxxFTrWsKVgNfVqCZrNG18-3KTLlFqLB006Dn1E3jZhsAWFHOq2LgJT09X6ObYLNZ8QLawITJGVk0IM4N3vrwbIMwDpjKFB_Jw2hmH18LDLY4"/>
-          </button>
-          <button class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-outline-variant/20 hover:bg-surface-container-low transition-all shadow-sm">
-            <img alt="WeChat" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARnECBghds9zRqgvYdFVHb5scMl2eBCw0iV4nOAfKBhgNTYf0vpg4RC4e5SOrS5Un8jE2_th6biEkS-j6utNaquehHDpQLUD3fYhUjWOLxi8l-kShvN8J1kuCXo-rClqokSGm_Iv4g6wy1k4JYu-B3XipI452RxImq8yX2WDpIu1NMZ_-estXkEYEm7WvtIeEstDgNbmnZPmpgh-9W434Ra8q7ZLgu3o7z7pHoo6OWa_ZjDiCZoKiFXFq8blsJAxsxeLiqlNfVygU"/>
-          </button>
-        </div>
+        <p class="mt-8 text-center text-xs text-on-surface-variant">
+          {{ $t('auth.noGoal') }}
+          <router-link to="/courses" class="font-bold text-primary hover:underline">{{ $t('auth.browseCourses') }}</router-link>
+        </p>
       </div>
     </section>
   </main>
@@ -254,11 +244,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useStudentAuth } from '@/composables/useStudentAuth'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 
 const isLogin = ref(true)
 const router = useRouter()
+const route = useRoute()
+const { t } = useI18n()
 const { login, register } = useStudentAuth()
 
 const submitting = ref(false)
@@ -281,16 +275,19 @@ async function handleLogin() {
   const password = loginPassword.value
 
   if (!email || !password) {
-    loginError.value = '请填写邮箱和密码'
+    loginError.value = t('auth.emailPasswordRequired')
     return
   }
 
   submitting.value = true
   try {
     await login({ email, password })
-    router.push('/dashboard')
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+      ? route.query.redirect
+      : '/dashboard'
+    router.push(redirect)
   } catch (e) {
-    loginError.value = e instanceof Error ? e.message : '登录失败，请重试'
+    loginError.value = e instanceof Error ? e.message : t('auth.loginFailed')
   } finally {
     submitting.value = false
   }
@@ -304,24 +301,27 @@ async function handleRegister() {
   const confirm = registerConfirmPassword.value
 
   if (!name || !email || !password || !confirm) {
-    registerError.value = '请填写所有字段'
+    registerError.value = t('auth.allFieldsRequired')
     return
   }
-  if (password.length < 6) {
-    registerError.value = '密码至少需要6位字符'
+  if (password.length < 8) {
+    registerError.value = t('auth.passwordTooShort')
     return
   }
   if (password !== confirm) {
-    registerError.value = '两次输入的密码不一致'
+    registerError.value = t('auth.passwordMismatch')
     return
   }
 
   submitting.value = true
   try {
     await register({ email, name, password })
-    router.push('/dashboard')
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+      ? route.query.redirect
+      : '/dashboard'
+    router.push(redirect)
   } catch (e) {
-    registerError.value = e instanceof Error ? e.message : '注册失败，请重试'
+    registerError.value = e instanceof Error ? e.message : t('auth.registerFailed')
   } finally {
     submitting.value = false
   }

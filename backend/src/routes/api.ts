@@ -4,10 +4,19 @@ import { Prisma, VideoResourceType } from '@prisma/client'
 import { prisma } from '../db/prisma.js'
 import { sendError, sendOk } from '../lib/apiResponse.js'
 import { serializeCourse, serializeResource } from '../lib/serializers.js'
-import { requireAdmin } from '../middleware/adminAuth.js'
-import { optionalStudentAuth } from '../middleware/studentAuth.js'
+import { requireAdminPermission } from '../middleware/adminAuth.js'
+import { optionalStudentAuth, requireStudentAuth } from '../middleware/studentAuth.js'
 import { chatRateLimit } from '../middleware/rateLimit.js'
-import { handleChatbot, postChat } from '../controllers/chatbotController.js'
+import {
+  handleAssistantFeedback,
+  handleEnhancedChatbot as handleChatbot,
+  postEnhancedIntent as postChat,
+} from '../controllers/enhancedChatbotController.js'
+import { getAdminCourseCatalog, getEducationCourses } from '../services/educationDataService.js'
+import { recordAdminAudit } from '../services/adminAuditService.js'
+import { parseCourseTranslations } from '../services/contentLocalization.js'
+import { MOCK_COURSES } from '../services/mockEducationData.js'
+import { findSuspiciousCourseTextField } from '../services/courseContentValidation.js'
 
 const router = Router()
 
@@ -32,53 +41,218 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
+function optionalText(value: unknown, maxLength: number) {
+  if (typeof value !== 'string') return null
+  const text = value.trim()
+  return text ? text.slice(0, maxLength) : null
+}
+
+async function courseExists(courseId: string) {
+  const localCourse = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
+  if (localCourse) return true
+  const integrated = await getEducationCourses()
+  return integrated.data.some((course) => course.id === courseId)
+}
+
+router.get('/admin/chatbot/feedback-summary', ...requireAdminPermission('feedback.read'), async (_req, res) => {
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const grouped = await prisma.chatFeedback.groupBy({
+      by: ['intent', 'rating'],
+      where: { createdAt: { gte: since } },
+      _count: { _all: true },
+    })
+    const lifetimeTotal = await prisma.chatFeedback.count()
+    const total = grouped.reduce((sum, row) => sum + row._count._all, 0)
+    const helpful = grouped
+      .filter((row) => row.rating === 'helpful')
+      .reduce((sum, row) => sum + row._count._all, 0)
+    const byIntentMap = new Map<string, { intent: string; total: number; helpful: number }>()
+    for (const row of grouped) {
+      const current = byIntentMap.get(row.intent) ?? { intent: row.intent, total: 0, helpful: 0 }
+      current.total += row._count._all
+      if (row.rating === 'helpful') current.helpful += row._count._all
+      byIntentMap.set(row.intent, current)
+    }
+    const byIntent = [...byIntentMap.values()]
+      .map((item) => ({
+        ...item,
+        helpfulRate: item.total ? Math.round((item.helpful / item.total) * 100) : null,
+      }))
+      .sort((a, b) => b.total - a.total)
+
+    sendOk(res, {
+      windowDays: 30,
+      lifetimeTotal,
+      total,
+      helpful,
+      unhelpful: total - helpful,
+      helpfulRate: total ? Math.round((helpful / total) * 100) : null,
+      byIntent,
+    })
+  } catch (error) {
+    sendError(res, error instanceof Error ? error.message : 'Failed to load feedback summary', 500)
+  }
+})
+
 // GET /courses
-router.get('/courses', async (req, res) => {
+router.get('/courses', ...requireAdminPermission('course.read'), async (req, res) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : ''
     const resourceType = parseResourceType(req.query.resource_type)
+    const archiveStatus = req.query.archive_status === 'archived' || req.query.archive_status === 'all'
+      ? req.query.archive_status
+      : 'active'
+    const locale = typeof req.query.locale === 'string' ? req.query.locale : undefined
     const page = typeof req.query.page === 'string' ? Number.parseInt(req.query.page, 10) : 1
     const pageSize = typeof req.query.pageSize === 'string' ? Number.parseInt(req.query.pageSize, 10) : 10
     const safePage = Number.isFinite(page) && page > 0 ? page : 1
     const safePageSize = Number.isFinite(pageSize) && [10, 20, 50].includes(pageSize) ? pageSize : 10
 
-    const where: Prisma.CourseWhereInput = {}
-    if (q) where.title = { contains: q }
-    if (resourceType) {
-      where.videoResources = { some: { resourceType } }
-    }
-
-    const total = await prisma.course.count({ where })
+    const catalog = await getAdminCourseCatalog(locale)
+    const normalizedQuery = q.toLocaleLowerCase()
+    const filtered = catalog.data.filter((course) => {
+      const matchesQuery = !normalizedQuery || [
+        course.title,
+        course.languageLabel,
+        course.language,
+        course.level,
+        course.teacher,
+      ].some((value) => value?.toLocaleLowerCase().includes(normalizedQuery))
+      const matchesResource = !resourceType ||
+        (course.resources ?? []).some((resource) => resource.resourceType === resourceType)
+      const matchesArchive = archiveStatus === 'all' || (archiveStatus === 'archived' ? course.isArchived : !course.isArchived)
+      return matchesQuery && matchesResource && matchesArchive
+    })
+    const total = filtered.length
     const totalPages = total > 0 ? Math.ceil(total / safePageSize) : 1
     const currentPage = Math.min(safePage, totalPages)
     const skip = (currentPage - 1) * safePageSize
-
-    const courses = await prisma.course.findMany({
-      where,
-      include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: safePageSize,
-    })
+    const courses = filtered.slice(skip, skip + safePageSize)
 
     sendOk(res, {
-      items: courses.map(serializeCourse),
+      items: courses.map((course) => ({
+        id: course.id,
+        title: course.title,
+        language: course.languageLabel ?? course.language,
+        level: course.level,
+        schedule: course.schedule,
+        teacher: course.teacher,
+        coverUrl: course.coverUrl,
+        description: course.description ?? null,
+        translations: course.translations ?? null,
+        isPublished: course.isPublished,
+        isArchived: course.isArchived,
+        archivedAt: course.archivedAt,
+        archivedBy: course.archivedBy,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+        catalogSource: course.catalogSource,
+        editable: course.editable,
+        resources: (course.resources ?? []).map((resource, index) => ({
+          id: resource.id,
+          courseId: course.id,
+          resource_type: resource.resourceType,
+          source_url: resource.sourceUrl,
+          title: resource.title,
+          translations: resource.translations ?? null,
+          sortOrder: index,
+          createdAt: course.createdAt,
+          updatedAt: course.updatedAt,
+        })),
+      })),
       pagination: { page: currentPage, pageSize: safePageSize, total, totalPages },
+      catalog: {
+        provider: catalog.source,
+        managedCount: catalog.data.filter((course) => course.catalogSource === 'managed').length,
+        sourceCount: catalog.data.filter((course) => course.catalogSource !== 'managed').length,
+        degraded: Boolean(catalog.degraded),
+      },
     })
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
   }
 })
 
+// POST /courses/import-demo/:id
+router.post('/courses/import-demo/:id', ...requireAdminPermission('course.write'), async (req, res) => {
+  try {
+    const courseId = typeof req.params.id === 'string' ? req.params.id : ''
+    const demo = MOCK_COURSES.find((course) => course.id === courseId)
+    if (!demo) {
+      sendError(res, 'demo course not found', 404)
+      return
+    }
+    const existing = await prisma.course.findUnique({ where: { id: demo.id }, select: { id: true } })
+    if (existing) {
+      sendError(res, 'course is already managed locally', 409)
+      return
+    }
+    const demoResources = demo.resources ?? []
+    const course = await prisma.course.create({
+      data: {
+        id: demo.id,
+        title: demo.title,
+        language: demo.language,
+        level: demo.level,
+        schedule: demo.schedule,
+        teacher: demo.teacher,
+        coverUrl: demo.coverUrl,
+        description: demo.description ?? null,
+        isPublished: demoResources.length > 0,
+        ...(demoResources.length > 0
+          ? {
+              videoResources: {
+                create: demoResources.map((resource, index) => ({
+                  resourceType: resource.resourceType,
+                  sourceUrl: resource.sourceUrl,
+                  title: resource.title,
+                  sortOrder: index,
+                })),
+              },
+            }
+          : {}),
+      },
+      include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
+    })
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'DEMO_COURSE_IMPORTED',
+      targetType: 'Course',
+      targetId: course.id,
+      summary: `将演示课程“${course.title}”复制为本地可管理课程`,
+      metadata: {
+        source: 'demo',
+        resourceCount: course.videoResources.length,
+        isPublished: course.isPublished,
+      },
+    })
+    sendOk(res, serializeCourse(course), 201)
+  } catch (err) {
+    sendError(res, err instanceof Error ? err.message : 'failed to import demo course', 500)
+  }
+})
+
 // POST /courses
-router.post('/courses', requireAdmin, async (req, res) => {
+router.post('/courses', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>
     const title = typeof body.title === 'string' ? body.title.trim() : ''
+    const language = optionalText(body.language, 50) ?? '英语'
+    const level = optionalText(body.level, 20)
+    const schedule = optionalText(body.schedule, 200)
+    const teacher = optionalText(body.teacher, 100)
     const coverUrl = typeof body.coverUrl === 'string' ? body.coverUrl.trim() : null
     const description = typeof body.description === 'string' ? body.description.trim() : null
+    const translations = parseCourseTranslations(body.translations)
+    const isPublished = typeof body.isPublished === 'boolean' ? body.isPublished : true
 
     if (!title) { sendError(res, 'title is required', 400); return }
+    const suspiciousField = findSuspiciousCourseTextField({ title, language, schedule, teacher, description })
+    if (suspiciousField) {
+      sendError(res, `course text contains suspicious replacement characters: ${suspiciousField}`, 400)
+      return
+    }
 
     const rawResources = Array.isArray(body.resources) ? body.resources : []
     const parsedResources: Prisma.VideoResourceCreateWithoutCourseInput[] = rawResources
@@ -88,13 +262,15 @@ router.post('/courses', requireAdmin, async (req, res) => {
         const sourceUrl = typeof r.source_url === 'string' ? r.source_url.trim() : ''
         const resourceTitle = typeof r.title === 'string' ? r.title.trim() : null
         const sortOrder = typeof r.sortOrder === 'number' && Number.isFinite(r.sortOrder) ? r.sortOrder : idx
-        return { resourceType, sourceUrl, title: resourceTitle, sortOrder }
+        const translations = parseCourseTranslations(r.translations)
+        return { resourceType, sourceUrl, title: resourceTitle, translations, sortOrder }
       })
       .filter((r) => !!r.resourceType && !!r.sourceUrl)
       .map((r) => ({
         resourceType: r.resourceType!,
         sourceUrl: r.sourceUrl,
         title: r.title,
+        ...(r.translations ? { translations: r.translations as Prisma.InputJsonValue } : {}),
         sortOrder: r.sortOrder,
       }))
 
@@ -106,13 +282,27 @@ router.post('/courses', requireAdmin, async (req, res) => {
     const course = await prisma.course.create({
       data: {
         title,
+        language,
+        level,
+        schedule,
+        teacher,
         coverUrl,
         description,
+        ...(translations ? { translations: translations as Prisma.InputJsonValue } : {}),
+        isPublished,
         videoResources: { create: parsedResources },
       },
       include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
     })
 
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_CREATED',
+      targetType: 'Course',
+      targetId: course.id,
+      summary: `创建课程“${course.title}”`,
+      metadata: { resourceCount: course.videoResources.length, isPublished: course.isPublished },
+    })
     sendOk(res, serializeCourse(course), 201)
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
@@ -120,7 +310,7 @@ router.post('/courses', requireAdmin, async (req, res) => {
 })
 
 // GET /courses/:id
-router.get('/courses/:id', async (req, res) => {
+router.get('/courses/:id', ...requireAdminPermission('course.read'), async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
@@ -139,25 +329,72 @@ router.get('/courses/:id', async (req, res) => {
 })
 
 // PUT /courses/:id
-router.put('/courses/:id', requireAdmin, async (req, res) => {
+router.put('/courses/:id', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
 
     const body = (req.body ?? {}) as Record<string, unknown>
     const title = typeof body.title === 'string' ? body.title.trim() : ''
+    const language = optionalText(body.language, 50) ?? '英语'
+    const level = optionalText(body.level, 20)
+    const schedule = optionalText(body.schedule, 200)
+    const teacher = optionalText(body.teacher, 100)
     const coverUrl = typeof body.coverUrl === 'string' ? body.coverUrl.trim() : null
     const description = typeof body.description === 'string' ? body.description.trim() : null
+    const translations = parseCourseTranslations(body.translations)
+    const isPublished = typeof body.isPublished === 'boolean' ? body.isPublished : true
     if (!title) { sendError(res, 'title is required', 400); return }
+    const suspiciousField = findSuspiciousCourseTextField({ title, language, schedule, teacher, description })
+    if (suspiciousField) {
+      sendError(res, `course text contains suspicious replacement characters: ${suspiciousField}`, 400)
+      return
+    }
 
     if (body.resources === undefined) {
-      const existed = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
+      const existed = await prisma.course.findUnique({
+        where: { id: courseId },
+        select: {
+          id: true,
+          isArchived: true,
+          _count: { select: { videoResources: true } },
+        },
+      })
       if (!existed) { sendError(res, 'course not found', 404); return }
+      if (existed.isArchived) { sendError(res, 'archived course is read-only', 409); return }
+      const structuredLessonCount = isPublished && existed._count.videoResources === 0
+        ? await prisma.courseLesson.count({
+            where: { isPublished: true, chapter: { courseId, isPublished: true } },
+          })
+        : 0
+      if (isPublished && existed._count.videoResources === 0 && structuredLessonCount === 0) {
+        sendError(res, 'published course requires at least one learning resource', 409)
+        return
+      }
 
       const updated = await prisma.course.update({
         where: { id: courseId },
-        data: { title, coverUrl, description },
+        data: {
+          title,
+          language,
+          level,
+          schedule,
+          teacher,
+          coverUrl,
+          description,
+          translations: translations
+            ? translations as Prisma.InputJsonValue
+            : Prisma.DbNull,
+          isPublished,
+        },
         include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
+      })
+      await recordAdminAudit({
+        actor: req.admin!,
+        action: 'COURSE_UPDATED',
+        targetType: 'Course',
+        targetId: updated.id,
+        summary: `更新课程“${updated.title}”`,
       })
       sendOk(res, serializeCourse(updated))
       return
@@ -172,7 +409,8 @@ router.put('/courses/:id', requireAdmin, async (req, res) => {
         const sourceUrl = typeof r.source_url === 'string' ? r.source_url.trim() : ''
         const resourceTitle = typeof r.title === 'string' ? r.title.trim() : null
         const sortOrder = typeof r.sortOrder === 'number' && Number.isFinite(r.sortOrder) ? r.sortOrder : idx
-        return { id, resourceType, sourceUrl, title: resourceTitle, sortOrder }
+        const translations = parseCourseTranslations(r.translations)
+        return { id, resourceType, sourceUrl, title: resourceTitle, translations, sortOrder }
       })
       .filter((r) => !!r.resourceType && !!r.sourceUrl)
 
@@ -183,9 +421,10 @@ router.put('/courses/:id', requireAdmin, async (req, res) => {
 
     const existed = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { id: true, videoResources: { select: { id: true } } },
+      select: { id: true, isArchived: true, videoResources: { select: { id: true } } },
     })
     if (!existed) { sendError(res, 'course not found', 404); return }
+    if (existed.isArchived) { sendError(res, 'archived course is read-only', 409); return }
 
     const existingIdSet = new Set(existed.videoResources.map((r) => r.id))
     const keepIdSet = new Set(parsedResources.map((r) => r.id).filter(Boolean))
@@ -199,35 +438,83 @@ router.put('/courses/:id', requireAdmin, async (req, res) => {
         if (item.id && existingIdSet.has(item.id)) {
           await tx.videoResource.update({
             where: { id: item.id },
-            data: { resourceType: item.resourceType!, sourceUrl: item.sourceUrl, title: item.title, sortOrder: item.sortOrder },
+            data: {
+              resourceType: item.resourceType!,
+              sourceUrl: item.sourceUrl,
+              title: item.title,
+              translations: item.translations
+                ? item.translations as Prisma.InputJsonValue
+                : Prisma.DbNull,
+              sortOrder: item.sortOrder,
+            },
           })
         } else {
           await tx.videoResource.create({
-            data: { courseId, resourceType: item.resourceType!, sourceUrl: item.sourceUrl, title: item.title, sortOrder: item.sortOrder },
+            data: {
+              courseId,
+              resourceType: item.resourceType!,
+              sourceUrl: item.sourceUrl,
+              title: item.title,
+              ...(item.translations ? { translations: item.translations as Prisma.InputJsonValue } : {}),
+              sortOrder: item.sortOrder,
+            },
           })
         }
       }
       return tx.course.update({
         where: { id: courseId },
-        data: { title, coverUrl, description },
+        data: {
+          title,
+          language,
+          level,
+          schedule,
+          teacher,
+          coverUrl,
+          description,
+          translations: translations
+            ? translations as Prisma.InputJsonValue
+            : Prisma.DbNull,
+          isPublished,
+        },
         include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
       })
     })
 
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_UPDATED',
+      targetType: 'Course',
+      targetId: updated.id,
+      summary: `更新课程“${updated.title}”及其学习资源`,
+      metadata: { resourceCount: updated.videoResources.length, isPublished: updated.isPublished },
+    })
     sendOk(res, serializeCourse(updated))
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
   }
 })
 
-// DELETE /courses/:id
-router.delete('/courses/:id', requireAdmin, async (req, res) => {
+// DELETE /courses/:id — safe archive; learning history is intentionally preserved.
+router.delete('/courses/:id', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
 
-    await prisma.course.delete({ where: { id: courseId } })
-    sendOk(res, { id: courseId })
+    const existing = await prisma.course.findUnique({ where: { id: courseId } })
+    if (!existing) { sendError(res, 'course not found', 404); return }
+    if (existing.isArchived) { sendError(res, 'course is already archived', 409); return }
+    const archived = await prisma.course.update({
+      where: { id: courseId },
+      data: { isArchived: true, isPublished: false, archivedAt: new Date(), archivedBy: req.admin!.adminId },
+    })
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_ARCHIVED',
+      targetType: 'Course',
+      targetId: courseId,
+      summary: `归档课程“${archived.title}”并保留全部学习历史`,
+    })
+    sendOk(res, { id: courseId, isArchived: true, archivedAt: archived.archivedAt })
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
       sendError(res, 'course not found', 404)
@@ -237,18 +524,44 @@ router.delete('/courses/:id', requireAdmin, async (req, res) => {
   }
 })
 
+router.post('/courses/:id/restore', ...requireAdminPermission('course.write'), async (req, res) => {
+  try {
+    const courseId = typeof req.params.id === 'string' ? req.params.id : ''
+    if (!courseId) { sendError(res, 'courseId is required', 400); return }
+    const existing = await prisma.course.findUnique({ where: { id: courseId } })
+    if (!existing) { sendError(res, 'course not found', 404); return }
+    if (!existing.isArchived) { sendError(res, 'course is not archived', 409); return }
+    const restored = await prisma.course.update({
+      where: { id: courseId },
+      data: { isArchived: false, isPublished: false, archivedAt: null, archivedBy: null },
+      include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
+    })
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_RESTORED',
+      targetType: 'Course',
+      targetId: courseId,
+      summary: `恢复课程“${restored.title}”为草稿`,
+    })
+    sendOk(res, serializeCourse(restored))
+  } catch (err) {
+    sendError(res, err instanceof Error ? err.message : 'failed to restore course', 500)
+  }
+})
+
 // ============================================================
 // === Resources ===
 // ============================================================
 
 // POST /courses/:courseId/resources
-router.post('/courses/:courseId/resources', requireAdmin, async (req, res) => {
+router.post('/courses/:courseId/resources', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.courseId === 'string' ? req.params.courseId : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
 
-    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
+    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, isArchived: true } })
     if (!course) { sendError(res, 'course not found', 404); return }
+    if (course.isArchived) { sendError(res, 'archived course is read-only', 409); return }
 
     const body = (req.body ?? {}) as Record<string, unknown>
     const resourceType = parseResourceType(body.resource_type)
@@ -258,6 +571,7 @@ router.post('/courses/:courseId/resources', requireAdmin, async (req, res) => {
     if (!sourceUrl) { sendError(res, 'source_url is required', 400); return }
 
     const title = typeof body.title === 'string' ? body.title.trim() || null : null
+    const translations = parseCourseTranslations(body.translations)
 
     const agg = await prisma.videoResource.aggregate({
       where: { courseId },
@@ -266,9 +580,24 @@ router.post('/courses/:courseId/resources', requireAdmin, async (req, res) => {
     const nextOrder = (agg._max.sortOrder ?? -1) + 1
 
     const resource = await prisma.videoResource.create({
-      data: { courseId, resourceType, sourceUrl, title, sortOrder: nextOrder },
+      data: {
+        courseId,
+        resourceType,
+        sourceUrl,
+        title,
+        ...(translations ? { translations: translations as Prisma.InputJsonValue } : {}),
+        sortOrder: nextOrder,
+      },
     })
 
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_RESOURCE_CREATED',
+      targetType: 'VideoResource',
+      targetId: resource.id,
+      summary: `为课程 ${courseId} 添加学习资源`,
+      metadata: { courseId, resourceType },
+    })
     sendOk(res, serializeResource(resource), 201)
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
@@ -276,16 +605,17 @@ router.post('/courses/:courseId/resources', requireAdmin, async (req, res) => {
 })
 
 // PUT /courses/:courseId/resources/sort  — MUST be before /:resourceId
-router.put('/courses/:courseId/resources/sort', requireAdmin, async (req, res) => {
+router.put('/courses/:courseId/resources/sort', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.courseId === 'string' ? req.params.courseId : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { id: true, videoResources: { select: { id: true } } },
+      select: { id: true, isArchived: true, videoResources: { select: { id: true } } },
     })
     if (!course) { sendError(res, 'course not found', 404); return }
+    if (course.isArchived) { sendError(res, 'archived course is read-only', 409); return }
 
     const body = req.body ?? {}
     const resourceIds: unknown = body.resourceIds
@@ -312,6 +642,14 @@ router.put('/courses/:courseId/resources/sort', requireAdmin, async (req, res) =
       include: { videoResources: { orderBy: { sortOrder: 'asc' } } },
     })
 
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_RESOURCES_SORTED',
+      targetType: 'Course',
+      targetId: courseId,
+      summary: `调整课程 ${courseId} 的资源顺序`,
+      metadata: { resourceCount: resourceIds.length },
+    })
     sendOk(res, serializeCourse(updated!))
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
@@ -319,14 +657,15 @@ router.put('/courses/:courseId/resources/sort', requireAdmin, async (req, res) =
 })
 
 // PUT /courses/:courseId/resources/:resourceId
-router.put('/courses/:courseId/resources/:resourceId', requireAdmin, async (req, res) => {
+router.put('/courses/:courseId/resources/:resourceId', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.courseId === 'string' ? req.params.courseId : ''
     const resourceId = typeof req.params.resourceId === 'string' ? req.params.resourceId : ''
     if (!courseId || !resourceId) { sendError(res, 'courseId and resourceId are required', 400); return }
 
-    const existing = await prisma.videoResource.findUnique({ where: { id: resourceId }, select: { id: true, courseId: true } })
+    const existing = await prisma.videoResource.findUnique({ where: { id: resourceId }, select: { id: true, courseId: true, course: { select: { isArchived: true } } } })
     if (!existing || existing.courseId !== courseId) { sendError(res, 'resource not found', 404); return }
+    if (existing.course.isArchived) { sendError(res, 'archived course is read-only', 409); return }
 
     const body = (req.body ?? {}) as Record<string, unknown>
     const resourceType = parseResourceType(body.resource_type)
@@ -336,12 +675,28 @@ router.put('/courses/:courseId/resources/:resourceId', requireAdmin, async (req,
     if (!sourceUrl) { sendError(res, 'source_url is required', 400); return }
 
     const title = typeof body.title === 'string' ? body.title.trim() || null : null
+    const translations = parseCourseTranslations(body.translations)
 
     const updated = await prisma.videoResource.update({
       where: { id: resourceId },
-      data: { resourceType, sourceUrl, title },
+      data: {
+        resourceType,
+        sourceUrl,
+        title,
+        translations: translations
+          ? translations as Prisma.InputJsonValue
+          : Prisma.DbNull,
+      },
     })
 
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_RESOURCE_UPDATED',
+      targetType: 'VideoResource',
+      targetId: resourceId,
+      summary: `更新课程 ${courseId} 的学习资源`,
+      metadata: { courseId, resourceType },
+    })
     sendOk(res, serializeResource(updated))
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
@@ -349,16 +704,38 @@ router.put('/courses/:courseId/resources/:resourceId', requireAdmin, async (req,
 })
 
 // DELETE /courses/:courseId/resources/:resourceId
-router.delete('/courses/:courseId/resources/:resourceId', requireAdmin, async (req, res) => {
+router.delete('/courses/:courseId/resources/:resourceId', ...requireAdminPermission('course.write'), async (req, res) => {
   try {
     const courseId = typeof req.params.courseId === 'string' ? req.params.courseId : ''
     const resourceId = typeof req.params.resourceId === 'string' ? req.params.resourceId : ''
     if (!courseId || !resourceId) { sendError(res, 'courseId and resourceId are required', 400); return }
 
-    const existing = await prisma.videoResource.findUnique({ where: { id: resourceId }, select: { id: true, courseId: true } })
+    const existing = await prisma.videoResource.findUnique({ where: { id: resourceId }, select: { id: true, courseId: true, course: { select: { isArchived: true } } } })
     if (!existing || existing.courseId !== courseId) { sendError(res, 'resource not found', 404); return }
+    if (existing.course.isArchived) { sendError(res, 'archived course is read-only', 409); return }
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        isPublished: true,
+        _count: { select: { videoResources: true } },
+      },
+    })
+    if (!course) { sendError(res, 'course not found', 404); return }
+    if (course.isPublished && course._count.videoResources <= 1) {
+      sendError(res, 'published course must keep at least one learning resource; unpublish it first', 409)
+      return
+    }
 
     await prisma.videoResource.delete({ where: { id: resourceId } })
+    await recordAdminAudit({
+      actor: req.admin!,
+      action: 'COURSE_RESOURCE_DELETED',
+      targetType: 'VideoResource',
+      targetId: resourceId,
+      summary: `删除课程 ${courseId} 的学习资源`,
+      metadata: { courseId },
+    })
     sendOk(res, { id: resourceId })
   } catch (err) {
     sendError(res, err instanceof Error ? err.message : 'Unknown error', 500)
@@ -369,20 +746,20 @@ router.delete('/courses/:courseId/resources/:resourceId', requireAdmin, async (r
 // === Progress ===
 // ============================================================
 
-function getUserId(req: Request): string {
-  return req.student?.studentId ?? 'anonymous'
-}
-
 // GET /courses/:id/progress
 router.get('/courses/:id/progress', optionalStudentAuth, async (req, res) => {
   try {
     const courseId = typeof req.params.id === 'string' ? req.params.id : ''
     if (!courseId) { sendError(res, 'courseId is required', 400); return }
 
-    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
-    if (!course) { sendError(res, 'course not found', 404); return }
+    if (!(await courseExists(courseId))) { sendError(res, 'course not found', 404); return }
 
-    const userId = getUserId(req)
+    if (!req.student) {
+      sendOk(res, { lastPositionSeconds: 0, isCompleted: false, progressPercent: 0 })
+      return
+    }
+
+    const userId = req.student.studentId
     const record = await prisma.studyRecord.findUnique({
       where: { userId_courseId: { userId, courseId } },
     })
@@ -429,8 +806,17 @@ router.post('/courses/:id/progress', optionalStudentAuth, async (req, res) => {
         : NaN
     const duration = isFinite(rawDuration) && rawDuration > 0 ? rawDuration : 0
 
-    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
-    if (!course) { sendError(res, 'course not found', 404); return }
+    if (!(await courseExists(courseId))) { sendError(res, 'course not found', 404); return }
+
+    if (!req.student) {
+      sendOk(res, {
+        recorded: false,
+        isCompleted: false,
+        lastPositionSeconds: Math.round(rawCurrentTime),
+        note: '登录后可同步学习进度',
+      })
+      return
+    }
 
     const shouldComplete = duration > 0 && rawCurrentTime / duration >= 0.9
     const progressPercent = duration > 0
@@ -446,7 +832,7 @@ router.post('/courses/:id/progress', optionalStudentAuth, async (req, res) => {
       updateData.completedAt = new Date()
     }
 
-    const userId = getUserId(req)
+    const userId = req.student.studentId
     const record = await prisma.studyRecord.upsert({
       where: { userId_courseId: { userId, courseId } },
       update: updateData,
@@ -486,13 +872,26 @@ router.post('/chatbot/intent', postChat)
 // POST /chatbot — 完整 RAG 流程
 // Body: { message: string, studentId: string }
 // Returns: { ok: true, data: { reply, intent, studentId } }
-router.post('/chatbot', chatRateLimit, handleChatbot)
+router.post('/chatbot', optionalStudentAuth, chatRateLimit, handleChatbot)
+router.post('/chatbot/feedback', optionalStudentAuth, chatRateLimit, handleAssistantFeedback)
+
+function isAiFlashcardGenerationEnabled() {
+  const enabled = (process.env.AI_ENABLED || 'false').trim().toLowerCase() === 'true'
+  const apiKey = (process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim()
+  return enabled && Boolean(apiKey)
+}
+
+router.get('/chatbot/capabilities', (_req, res) => {
+  sendOk(res, {
+    flashcardGenerationEnabled: isAiFlashcardGenerationEnabled(),
+  })
+})
 
 // ============================================================
 // POST /chatbot/flashcard — 非流式知识点提取
 // ============================================================
 
-router.post('/chatbot/flashcard', chatRateLimit, async (req, res) => {
+router.post('/chatbot/flashcard', requireStudentAuth, chatRateLimit, async (req, res) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>
     const content = typeof body.content === 'string' ? body.content.trim() : ''
@@ -500,8 +899,11 @@ router.post('/chatbot/flashcard', chatRateLimit, async (req, res) => {
     if (!content) { sendError(res, 'content is required', 400); return }
     if (content.length > 8000) { sendError(res, 'content too long (max 8000 chars)', 400); return }
 
-    const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
-    if (!apiKey) { sendError(res, 'AI is not configured on server', 503); return }
+    const apiKey = (process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim()
+    if (!isAiFlashcardGenerationEnabled()) {
+      sendError(res, 'AI flashcard generation is not enabled', 503)
+      return
+    }
 
     const baseUrl = normalizeBaseUrl(process.env.AI_BASE_URL || 'https://api.openai.com')
     const model = process.env.AI_MODEL || 'gpt-4o-mini'
@@ -560,118 +962,9 @@ ${content}`
   }
 })
 
-// ============================================================
-// === Chat (SSE Streaming) ===
-// ============================================================
-
-type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
-
 function normalizeBaseUrl(raw: string) {
   const trimmed = raw.replace(/\/$/, '')
   return trimmed.endsWith('/v1') ? trimmed : `${trimmed}/v1`
 }
-
-function isValidMessages(v: unknown): v is ChatMessage[] {
-  return (
-    Array.isArray(v) && v.length > 0 &&
-    v.every((m) => isRecord(m) && typeof m.content === 'string' && m.content.trim().length > 0 &&
-      ['system', 'user', 'assistant'].includes(m.role as string))
-  )
-}
-
-function buildSystemPrompt(context: Record<string, unknown>): string {
-  const courseName = typeof context.courseName === 'string' ? context.courseName.trim() : ''
-  const courseStr = courseName ? `，当前课程为《${courseName}》` : ''
-  return `你是一位专业、友善的 AI 学习助教${courseStr}。请用排版清晰的 Markdown 格式，简洁明了地解答用户的学习疑惑。请直接输出格式化后的文本，绝对不要在回答的最外层使用 \`\`\`markdown 代码块包裹！`
-}
-
-// POST /chat  — streams response as SSE (text/event-stream)
-router.post('/chat', chatRateLimit, async (req, res) => {
-  const body = (req.body ?? {}) as Record<string, unknown>
-
-  let messages: ChatMessage[]
-  if (isValidMessages(body.messages)) {
-    messages = body.messages
-  } else if (typeof body.message === 'string' && body.message.trim()) {
-    messages = [{ role: 'user', content: body.message.trim() }]
-  } else {
-    sendError(res, 'messages (array) or message (string) is required', 400)
-    return
-  }
-
-  // 注入 context 为 system prompt
-  const context = isRecord(body.context) ? body.context : null
-  if (context && !messages.some((m) => m.role === 'system')) {
-    messages = [{ role: 'system', content: buildSystemPrompt(context) }, ...messages]
-  }
-
-  console.log('[chat] Final messages payload:', JSON.stringify(messages, null, 2))
-
-  const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
-  if (!apiKey) { sendError(res, 'AI is not configured on server', 503); return }
-
-  const endpoint = `${normalizeBaseUrl(process.env.AI_BASE_URL || 'https://api.openai.com')}/chat/completions`
-  const model = process.env.AI_MODEL || 'gpt-4o-mini'
-
-  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-  // 禁用 Nginx 等反向代理缓存，保障 TTFB 性能
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.setHeader('X-Accel-Buffering', 'no')
-  res.flushHeaders()
-
-  const sendEvent = (event: string, data: string) => res.write(`event: ${event}\ndata: ${data}\n\n`)
-
-  const abort = new AbortController()
-  const timeout = setTimeout(() => abort.abort(), 60_000)
-  req.on('close', () => abort.abort())
-
-  try {
-    const upstream = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, Accept: 'text/event-stream' },
-      body: JSON.stringify({ model, messages, stream: true }),
-      signal: abort.signal,
-    })
-    clearTimeout(timeout)
-
-    if (!upstream.ok) {
-      const detail = process.env.NODE_ENV !== 'production' ? `: ${await upstream.text()}` : ''
-      sendEvent('error', JSON.stringify({ message: `Upstream AI error ${upstream.status}${detail}` }))
-      res.end(); return
-    }
-    if (!upstream.body) { sendEvent('error', JSON.stringify({ message: 'No response body from AI' })); res.end(); return }
-
-    const reader = upstream.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed.startsWith('data:')) continue
-        const payload = trimmed.slice(5).trim()
-        if (payload === '[DONE]') { sendEvent('done', '{}'); res.end(); return }
-        try {
-          const chunk = JSON.parse(payload) as { choices?: Array<{ delta?: { content?: string | null } }> }
-          const content = chunk.choices?.[0]?.delta?.content
-          if (content) sendEvent('delta', JSON.stringify({ content }))
-        } catch { /* ignore malformed lines */ }
-      }
-    }
-    sendEvent('done', '{}')
-    res.end()
-  } catch (err) {
-    clearTimeout(timeout)
-    const msg = err instanceof Error && err.name === 'AbortError' ? 'Request timeout or client disconnected' : (err instanceof Error ? err.message : 'Unknown error')
-    sendEvent('error', JSON.stringify({ message: msg }))
-    res.end()
-  }
-})
 
 export default router

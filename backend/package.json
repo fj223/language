@@ -4,8 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
+    "test:chatbot": "npm run build && node scripts/test-chatbot-intents.mjs",
+    "test:integration": "npm run build && node scripts/test-education-data-integration.mjs",
+    "test:domain": "npm run build && node scripts/test-domain-rules.mjs",
+    "test:e2e": "npm run build && node scripts/test-business-workflow.mjs",
+    "evaluate:chatbot": "npm run build && node scripts/evaluate-chatbot.mjs --write",
+    "evidence:generate": "npm run build && node scripts/generate-thesis-evidence.mjs",
+    "verify": "npm run build && node scripts/test-domain-rules.mjs && node scripts/test-chatbot-intents.mjs && node scripts/test-content-localization.mjs && node scripts/test-education-data-integration.mjs && node scripts/evaluate-chatbot.mjs --write",
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -24,7 +32,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "prisma": "^6.19.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -34,7 +43,6 @@
     "@types/helmet": "^0.0.48",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
-    "prisma": "^6.19.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

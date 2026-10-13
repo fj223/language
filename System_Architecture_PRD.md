@@ -1,389 +1,342 @@
-# 系统架构与产品需求文档
+# OpenEdu 系统架构与论文设计说明
 
-**项目名称：** 新言教育 OpenEdu — 多语言国际化在线教育平台
-**文档版本：** v1.0
-**文档日期：** 2026年5月
-**文档性质：** 毕业设计系统架构与产品需求综合报告
+文档版本：2.0
 
----
+适用范围：硕士论文项目支持与本地答辩演示
 
-## 目录
+实现基线：2026-07-25
 
-1. [产品概述与需求分析](#1-产品概述与需求分析)
-2. [用户角色与权限模型](#2-用户角色与权限模型)
-3. [总体技术架构](#3-总体技术架构)
-4. [前端工程架构](#4-前端工程架构)
-5. [后端服务架构](#5-后端服务架构)
-6. [数据持久层设计](#6-数据持久层设计)
-7. [核心功能实现分析](#7-核心功能实现分析)
-8. [AI 智能教务助手模块](#8-ai-智能教务助手模块)
-9. [关键技术难点与解决方案](#9-关键技术难点与解决方案)
-10. [安全机制设计](#10-安全机制设计)
-11. [部署架构](#11-部署架构)
-12. [系统局限性与未来演进方向](#12-系统局限性与未来演进方向)
+## 1. 研究问题与系统边界
 
----
+教育机构通常同时维护课程内容、学生课表、成绩、报名信息和校内政策。数据来源分散、字段不统一，学生需要在多个入口之间切换，管理人员也难以控制不同岗位的操作范围。
 
+OpenEdu 重点解决三个问题：
 
-## 1. 产品概述与需求分析
+1. 如何以统一契约集成本地课程与机构教务数据。
+2. 如何让智能问答基于可信数据和政策作答，而不是生成无法验证的信息。
+3. 如何通过权限、状态流转和审计保证课程、政策和报名业务完整可追踪。
 
-### 1.1 项目背景
+系统用于研究设计、原型实现和实验验证，不承担生产上线、高并发、支付结算或正式成绩管理。
 
-随着全球化进程的深入推进，多语言教育需求呈现出显著增长态势。传统线下语言培训机构在课程资源管理、学员进度追踪及个性化辅导等方面存在明显的效率瓶颈。本项目旨在构建一套面向语言培训学校的全栈式在线教育平台，以"新言教育 OpenEdu"为品牌定位，通过前后端分离架构、多语言国际化支持及 AI 智能教务助手三大核心能力，为学员提供高效、沉浸式的语言学习体验，同时为教务管理人员提供完整的课程与资源管理工具链。
+## 2. 需求与取舍
 
-### 1.2 核心产品定位
+### 2.1 核心功能
 
-本平台定位为**多语言国际化教育门户与智能教务系统**，覆盖以下七种语言的课程体系：英语、俄语、法语、日语、德语、西班牙语、韩语。平台的核心差异化能力体现在三个维度：
+| 模块 | 核心能力 | 研究价值 |
+|---|---|---|
+| 多源数据集成 | 字段适配、来源标记、缓存、超时和格式校验 | 验证异构数据统一访问 |
+| 智能教务问答 | 意图识别、可信上下文、政策检索、多轮追问 | 验证可解释问答方案 |
+| 学生服务 | 登录、课表、成绩、收藏、提醒、报名 | 验证端到端学生流程 |
+| 管理后台 | 课程、政策、报名、反馈、管理员管理 | 验证组织业务流程 |
+| 权限与审计 | RBAC、状态保护、操作日志 | 验证治理与可追溯性 |
 
-**（1）多语言国际化（i18n）**：界面语言支持中文、俄语、英语三种切换，所有动态数据（课程名称、教师信息、课程大纲等）均通过 vue-i18n 的 Composition API 模式实现响应式翻译，确保语言切换时无需页面刷新即可完成全局文案更新。
+### 2.2 不纳入范围
 
-**（2）双轨 API 架构**：系统同时维护面向真实数据库的核心 API（`/api`）与面向教务门户的网关 API（`/api/gateway`），前者负责课程 CRUD 与学习进度持久化，后者提供课程展示、课表查询与成绩查询的稳定数据契约，两套 API 职责清晰、互不干扰。
+- 在线支付与退款执行。
+- 直播课堂与音视频会议。
+- 社区论坛和即时通讯。
+- 短信、邮件和商业推送。
+- 原生移动应用。
+- 单点登录、微服务拆分与分布式集群。
+- 由聊天机器人直接修改成绩、排课或缴费。
 
-**（3）AI 赋能**：基于 DeepSeek V3 大语言模型，系统实现了两种 AI 交互模式：面向课程学习的流式 AI 学习助手（SSE 协议）与面向教务查询的意图识别型智能客服（RAG 混合架构），分别服务于不同的用户场景。
+这些能力会扩大项目范围，但不会直接增强当前论文要验证的数据集成和智能问答问题。
 
-### 1.3 功能需求概览
+## 3. 用户与权限模型
 
-| 功能模块 | 核心需求描述 | 优先级 |
-|---------|------------|--------|
-| 课程门户首页 | 多语言展示、语种分类导航、快速入口卡片 | P0 |
-| 课程列表页 | 语种筛选、关键词搜索、分页浏览 | P0 |
-| 课程详情页 | 课程信息展示、报名咨询、教师介绍、大纲预览 | P0 |
-| 个人中心（教务） | 本周课表（周视图）、成绩与出勤可视化 | P1 |
-| 管理后台 | 课程 CRUD、资源增删改排序、Token 鉴权 | P0 |
-| AI 学习助手 | 课程内容问答、Markdown 渲染、知识卡片生成 | P1 |
-| AI 教务助手 | 课表/成绩查询、多语言翻译、通用教务问答 | P1 |
-| 闪卡复习系统 | 词汇卡片创建、复习大厅管理 | P2 |
-| 语音输入 | Web Speech API 集成、实时语音转文字 | P2 |
+### 3.1 用户身份
 
----
+| 身份 | 可执行操作 |
+|---|---|
+| 访客 | 查看已发布课程，查询公开课程与政策，注册或登录 |
+| 学生 | 访客能力，以及课表、成绩、收藏、提醒、报名、闪卡 |
+| 超级管理员 | 全部管理能力、管理员账号和审计日志 |
+| 内容管理员 | 课程维护、报名审核、反馈查看 |
+| 政策编辑 | 政策维护，课程和反馈只读 |
+| 数据分析员 | 课程、政策、报名和反馈只读 |
 
+### 3.2 RBAC 权限矩阵
 
-## 2. 用户角色与权限模型
+| 权限 | 超级管理员 | 内容管理员 | 政策编辑 | 数据分析员 |
+|---|:---:|:---:|:---:|:---:|
+| `course.read` | ✓ | ✓ | ✓ | ✓ |
+| `course.write` | ✓ | ✓ |  |  |
+| `policy.read` | ✓ | ✓ | ✓ | ✓ |
+| `policy.write` | ✓ |  | ✓ |  |
+| `feedback.read` | ✓ | ✓ | ✓ | ✓ |
+| `enrollment.read` | ✓ | ✓ |  | ✓ |
+| `enrollment.write` | ✓ | ✓ |  |  |
+| `admin.manage` | ✓ |  |  |  |
 
-### 2.1 角色定义
+前端路由用于减少无权限入口，后端中间件负责最终授权。系统不依赖前端隐藏按钮实现安全控制。
 
-本系统采用基于角色的访问控制（Role-Based Access Control，RBAC）模型，定义三类用户角色：
+管理员保护规则：
 
-**（1）访客（Guest）**
+- 禁止停用或降级最后一个有效超级管理员。
+- 禁止管理员停用自身账号。
+- 停用账号的旧令牌在后续请求中失效。
+- 管理员与学生使用不同的 JWT 密钥和本地会话键。
 
-访客无需注册或登录即可访问平台的公开内容。其可访问范围包括：课程门户首页、课程列表页（含语种筛选与搜索）、课程详情页（含价格、大纲、教师信息）。访客可使用 AI 教务助手进行通用问答与多语言翻译，但无法查询个人课表与成绩数据。
+## 4. 总体架构
 
-**（2）学生（Student）**
-
-学生通过前端 `useStudentAuth` Composable 完成身份认证，认证信息以 JSON 格式持久化于浏览器 `localStorage`（键名：`STUDENT_SESSION`），包含 `studentId`、`name`、`loggedInAt` 三个字段。当前阶段采用客户端模拟登录机制，后端 API 以固定 `studentId`（如 `stu_001`）作为数据查询标识。
-
-学生在访客权限基础上，额外获得以下能力：
-- 访问个人中心（`/dashboard`），查看本周课表与历史成绩
-- 向 AI 教务助手发起个人数据查询（课表、成绩）
-- 使用 AI 学习助手进行课程内容问答
-- 创建与管理个人词汇闪卡
-
-**（3）教务管理员（Admin）**
-
-管理员通过 HTTP 请求头中的 `X-Admin-Token` 或 `Authorization: Bearer <token>` 字段传递鉴权令牌，后端 `requireAdmin` 中间件对令牌进行严格校验。管理员拥有系统最高权限，可执行以下操作：
-- 创建、编辑、删除课程（`POST/PUT/DELETE /api/courses`）
-- 管理课程下的视频资源（增删改、批量排序）
-- 访问管理后台（`/admin`）
-
-### 2.2 权限矩阵
-
-| 操作 | 访客 | 学生 | 管理员 |
-|-----|------|------|--------|
-| 浏览课程列表/详情 | ✅ | ✅ | ✅ |
-| 查询个人课表/成绩 | ❌ | ✅ | ✅ |
-| AI 通用问答/翻译 | ✅ | ✅ | ✅ |
-| AI 个人数据查询 | ❌ | ✅ | ✅ |
-| 创建/编辑/删除课程 | ❌ | ❌ | ✅ |
-| 管理课程资源 | ❌ | ❌ | ✅ |
-| 创建词汇闪卡 | ❌ | ✅ | ✅ |
-
-### 2.3 管理员鉴权实现
-
-后端 `adminAuth.ts` 中间件实现了双 Header 兼容的令牌提取逻辑：
-
-```typescript
-// 支持 x-admin-token 直接传值，或 Authorization: Bearer <token> 两种格式
-const headerValue =
-  (typeof req.headers['x-admin-token'] === 'string' && req.headers['x-admin-token']) ||
-  (typeof req.headers.authorization === 'string' && req.headers.authorization) || ''
-
-const token = headerValue ? extractToken(headerValue) : ''
-if (!token || token !== expected) {
-  sendError(res, 'Unauthorized', 401)
-  return
-}
+```mermaid
+flowchart LR
+    U["访客 / 学生"] --> F["Vue 学生门户"]
+    A["管理员"] --> M["Vue 管理后台"]
+    F --> API["Express API"]
+    M --> API
+    API --> AUTH["身份认证与 RBAC"]
+    API --> BIZ["课程 / 报名 / 政策服务"]
+    API --> CHAT["混合式智能助手"]
+    API --> ADAPTER["教育数据适配层"]
+    BIZ --> DB[("MySQL / Prisma")]
+    CHAT --> DB
+    CHAT --> ADAPTER
+    ADAPTER --> MOCK["演示教务数据"]
+    ADAPTER --> EXT["机构 API（可选）"]
+    CHAT -. "可选表达增强" .-> LLM["OpenAI 兼容 API"]
 ```
 
-前端 `http.ts` 中的 Axios 请求拦截器在每次请求时自动从 `localStorage` 读取 `ADMIN_TOKEN` 并注入请求头，实现了管理员令牌的透明传递。
+### 4.1 前端
 
----
+- Vue 3 Composition API 和 TypeScript。
+- Vue Router 管理公开页、学生页和管理页。
+- Pinia、组合式函数和统一 HTTP 层维护会话状态。
+- vue-i18n 支持中文、英文和俄文。
+- 全局悬浮助手可由首页和课程详情通过事件直接打开。
 
+### 4.2 后端
 
-## 3. 总体技术架构
+- Express 5 提供统一 JSON API。
+- Prisma 管理 MySQL 数据和迁移。
+- 学生 JWT、管理员 JWT 与 RBAC 中间件相互独立。
+- 请求编号、访问日志、速率限制、Helmet 和统一错误处理提供基础可观测性。
+- `/api/legacy/*` 已停用并统一返回 `410 Gone`。
 
-### 3.1 三层架构体系
+### 4.3 数据层
 
-本系统采用经典的前后端分离三层架构，各层职责明确、边界清晰：
+主要实体：
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    表现层（Presentation Layer）               │
-│  Vue 3 SPA  ·  TailwindCSS  ·  Element Plus  ·  vue-i18n   │
-│  Vite 构建  ·  TypeScript  ·  Pinia 状态管理                 │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTP / SSE
-                           │ Axios / Fetch API
-┌──────────────────────────▼──────────────────────────────────┐
-│                    业务逻辑层（Business Layer）               │
-│  Express 5  ·  TypeScript  ·  三路由模块                     │
-│  RBAC 中间件  ·  速率限制  ·  Helmet 安全头                  │
-│  DeepSeek V3 API 集成  ·  SSE 流式响应                       │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ Prisma ORM
-┌──────────────────────────▼──────────────────────────────────┐
-│                    数据持久层（Data Layer）                   │
-│  MySQL 数据库  ·  Prisma ORM  ·  4 个核心数据模型            │
-│  Course  ·  VideoResource  ·  StudyRecord  ·  Flashcard     │
-└─────────────────────────────────────────────────────────────┘
-```
+- `Student`：学生身份。
+- `AdminUser`：管理员身份与角色。
+- `Course`、`VideoResource`：本地课程和资源。
+- `EnrollmentApplication`：报名申请及审核状态。
+- `SchoolPolicy`：可发布、可版本化的政策知识。
+- `CourseFavorite`、`LearningReminder`：学生学习服务。
+- `StudyRecord`、`Flashcard`：学习过程数据。
+- `ChatFeedback`：回答质量反馈。
+- `AdminAuditLog`：关键管理操作日志。
 
-### 3.2 技术栈全景
+## 5. 多源教育数据集成
 
-**前端技术栈**
+### 5.1 统一数据入口
 
-| 技术 | 版本 | 用途 |
-|-----|------|------|
-| Vue 3 | ^3.5.30 | 核心 UI 框架，Composition API |
-| TypeScript | ~5.9.3 | 静态类型系统 |
-| Vite | ^8.0.1 | 构建工具与开发服务器 |
-| vue-router | ^4.6.4 | 客户端路由，History 模式 |
-| Pinia | ^3.0.4 | 全局状态管理 |
-| vue-i18n | ^9.14.5 | 国际化框架，Composition API 模式 |
-| TailwindCSS | ^4.2.2 | 原子化 CSS 框架 |
-| Element Plus | ^2.13.6 | UI 组件库（表格、标签等） |
-| Axios | ^1.13.6 | HTTP 客户端 |
-| marked | ^18.0.2 | Markdown 渲染 |
-| DOMPurify | ^3.4.0 | XSS 防护，HTML 净化 |
+学生门户和智能助手都调用 `educationDataService`，避免为页面和问答分别维护两套数据逻辑。
 
-**后端技术栈**
+数据源模式：
 
-| 技术 | 版本 | 用途 |
-|-----|------|------|
-| Node.js | ≥18 | 运行时环境 |
-| Express | ^5.2.1 | Web 框架 |
-| TypeScript | ^6.0.2 | 静态类型系统 |
-| Prisma | ^6.19.2 | ORM 框架 |
-| MySQL | — | 关系型数据库 |
-| helmet | ^8.1.0 | HTTP 安全头 |
-| express-rate-limit | ^8.3.1 | API 速率限制 |
-| cors | ^2.8.6 | 跨域资源共享 |
-| tsx | ^4.21.0 | TypeScript 直接执行（开发模式） |
+- `mock`：论文演示模式。
+- `external`：机构接口模式。
+- `Course` 表：管理员维护的本地课程。
 
-### 3.3 路由架构
+公开课程目录由“已发布本地课程 + 当前机构课程源”组成。草稿课程不会进入门户或智能助手推荐结果。
 
-后端挂载三个独立的路由模块，职责分离：
+### 5.2 适配流程
 
-```
-/api          → api.ts        课程 CRUD、资源管理、学习进度、闪卡、AI 聊天
-/api/gateway  → gateway-api.ts  教务门户数据（课程展示、课表、成绩）
-/api/legacy   → legacy-api.ts   模拟旧教务系统接口（供 AI 助手 RAG 调用）
-/api/health   → 内联处理器      服务健康检查
+```mermaid
+flowchart LR
+    R["课程 / 课表 / 成绩请求"] --> S{"数据源模式"}
+    S -->|mock| D["演示数据"]
+    S -->|external| E["机构 API"]
+    E --> V["字段和范围校验"]
+    D --> N["统一数据模型"]
+    V --> N
+    L["已发布本地课程"] --> N
+    N --> Q["搜索与筛选"]
+    Q --> O["数据 + source + fetchedAt"]
 ```
 
-前端路由采用 Vue Router 4 的 History 模式，路由表如下：
+适配层当前实现：
 
-```
-/              → HomeView.vue        门户首页
-/courses       → CourseListView.vue  课程列表
-/courses/:id   → CourseDetailView.vue 课程详情
-/dashboard     → DashboardView.vue   个人中心（教务）
-/admin         → Admin.vue           管理后台
-/auth          → AuthView.vue        认证页面
-/flashcards    → FlashcardsView.vue  闪卡复习
-```
+- 外部请求超时。
+- Bearer API Key。
+- 数组或 `{ data: [...] }` 响应解包。
+- 必填字段、空值、星期范围、成绩范围和出勤率校验。
+- 公开机构课程 5 分钟内存缓存。
+- 响应头返回数据来源和获取时间。
+- 外部接口失败时返回明确的 `502/503`，不把演示数据伪装成真实结果。
 
----
+## 6. 智能问答设计
 
+### 6.1 当前能力边界
 
-## 4. 前端工程架构
+系统不是无限制闲聊机器人。当前核心是可解释的混合式问答：
 
-### 4.1 目录结构与模块划分
-
-前端工程遵循关注点分离原则，按功能域组织目录结构：
-
-```
-frontend/src/
-├── api/           # HTTP 请求层（类型定义 + 请求函数）
-│   ├── http.ts    # Axios 实例 + 请求拦截器
-│   ├── course.ts  # 课程 CRUD + 进度 API
-│   ├── gateway.ts # 教务门户 API
-│   ├── chat.ts    # SSE 流式聊天 API
-│   └── flashcard.ts # 闪卡 API
-├── components/    # 可复用 UI 组件
-│   ├── AIChat.vue       # 课程内嵌 AI 学习助手
-│   ├── ChatbotWidget.vue # 全局悬浮 AI 教务助手
-│   └── Player.vue       # 多类型视频播放器
-├── composables/   # 可复用逻辑（Composition API）
-│   └── useStudentAuth.ts # 学生身份认证
-├── domain/        # 领域模型与业务逻辑
-│   └── resourceMeta.ts  # 资源类型元数据
-├── layouts/       # 页面布局组件
-│   └── DefaultLayout.vue
-├── locales/       # 国际化资源
-│   ├── index.ts   # i18n 实例创建
-│   ├── zh.ts      # 中文翻译
-│   ├── ru.ts      # 俄语翻译
-│   └── en.ts      # 英语翻译
-├── router/        # 路由配置
-├── stores/        # Pinia 状态管理
-│   └── useLangStore.ts  # 语言状态 + 翻译字典
-└── views/         # 页面视图组件
-    ├── home/      # 门户首页
-    ├── courses/   # 课程列表与详情
-    ├── user/      # 个人中心
-    ├── admin/     # 管理后台
-    └── auth/      # 认证页面
+```text
+用户问题
+  → 请求校验
+  → 意图识别
+  → 最近对话上下文解析
+  → 权限判断
+  → 结构化数据查询 / 政策检索 / 学习建议
+  → 可选生成式表达增强
+  → 回答 + 来源 + 建议追问 + 结构化卡片
 ```
 
-### 4.2 Vue 3 组合式 API 的工程实践
+生成式 AI 默认关闭。关闭时，可信数据类问题仍有确定性回答；开启时，模型不能脱离请求中提供的可信上下文编造事实。
 
-本项目全面采用 Vue 3 Composition API（`<script setup>` 语法糖），摒弃 Options API，以实现更好的逻辑复用性与类型推断能力。
+### 6.2 意图集合
 
-**响应式状态管理模式**
+| 意图 | 数据与处理方式 |
+|---|---|
+| `TIMETABLE` | 登录身份对应的机构课表 |
+| `GRADES` | 登录身份对应的成绩与出勤 |
+| `COURSE_DISCOVERY` | 已发布本地课程与机构课程 |
+| `STUDY_PLAN` | 可执行的学习计划模板 |
+| `SCHOOL_POLICY` | 数据库中已发布政策 |
+| `TRANSLATE` | 语言学习辅助；无 AI 时提供受控说明 |
+| `GENERAL` | 能力导航和安全兜底 |
 
-在 `DashboardView.vue` 中，课表与成绩模块采用独立的响应式状态，两个数据请求在 `onMounted` 中并行发起，互不阻塞：
+最近六轮对话用于处理“它”“这个课程”“继续”等指代。每条消息限制为 500 字。
 
-```typescript
-// 课表与成绩状态完全独立，错误互不影响
-const timetable = ref<TimetableEntry[]>([])
-const timetableLoading = ref(false)
-const timetableError = ref('')
+### 6.3 回答多样性
 
-const grades = ref<GradeEntry[]>([])
-const gradesLoading = ref(false)
-const gradesError = ref('')
+回答多样性来自任务结构，而不是随机改写事实：
 
-// 并行请求，避免串行等待
-onMounted(() => {
-  void loadTimetable()
-  void loadGrades()
-})
+- 课表使用时间顺序。
+- 成绩使用摘要与改进建议。
+- 课程发现使用比较说明和课程卡片。
+- 学习计划使用分日安排。
+- 政策回答引用政策名称与版本。
+- 每类意图返回不同的建议追问。
+- 同时区分机构事实、演示数据、政策规定和学习建议。
+
+### 6.4 安全策略
+
+- 课表与成绩只读取 JWT 中的学生身份。
+- 未登录用户不能查询个人数据。
+- 政策仅检索已发布版本。
+- 不保存完整问答正文；反馈仅保存回答编号、意图、评价和可选原因。
+- AI 鉴权失败后进入临时冷却，避免每条消息重复等待无效配置。
+- 不允许通过聊天直接修改高风险业务数据。
+
+## 7. 业务状态与闭环
+
+### 7.1 报名流程
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: 学生提交
+    PENDING --> APPROVED: 管理员批准
+    PENDING --> REJECTED: 管理员拒绝
+    PENDING --> CANCELLED: 学生取消
+    REJECTED --> PENDING: 学生修改后重申
+    CANCELLED --> PENDING: 学生重新提交
 ```
 
-**计算属性驱动的数据转换**
+学生可以查看当前状态和审核意见；管理员审核后记录审核人、审核时间并写入审计日志。
 
-课表的周视图展示通过 `computed` 属性实现，将扁平的 `TimetableEntry[]` 数组按 `dayOfWeek` 字段分组，并在组内按 `startTime` 升序排列：
+### 7.2 政策流程
 
-```typescript
-const weekDays = computed(() =>
-  Array.from({ length: 7 }, (_, i) => {
-    const day = i + 1
-    return {
-      day,
-      name: t(`dashboard.weekdays.${DAY_KEYS[day]}`),
-      entries: timetable.value
-        .filter((e) => e.dayOfWeek === day)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    }
-  }),
-)
+```text
+新建草稿 → 编辑关键词、摘要和指引 → 发布 → 进入助手知识库
+                         ↘ 停用/删除 → 不再参与公开问答
 ```
 
-此设计将数据转换逻辑与渲染逻辑完全解耦，`computed` 的惰性求值特性确保仅在 `timetable` 数据变化时重新计算，避免不必要的渲染开销。
+每次修改更新版本号和时间。政策写权限与课程写权限相互独立。
 
-### 4.3 国际化（i18n）架构设计
+### 7.3 课程流程
 
-#### 4.3.1 技术选型与配置
-
-本项目采用 vue-i18n v9 的 **Composition API 模式**（`legacy: false`），以获得完整的 TypeScript 类型支持与 Vue 3 响应式集成：
-
-```typescript
-// locales/index.ts
-export const i18n = createI18n({
-  legacy: false,       // 启用 Composition API 模式
-  locale: 'zh',        // 默认语言：中文
-  fallbackLocale: 'zh', // 回退语言
-  messages: { zh, ru, en },
-})
+```text
+管理员创建课程 → 添加资源 → 草稿检查 → 发布
+                                      ↓
+                         门户课程列表、详情和助手推荐
 ```
 
-#### 4.3.2 双层国际化架构
+取消发布后，课程立即退出公开目录，但仍可在管理端查看和修改。
 
-本项目实现了一种独特的**双层国际化架构**，以应对不同场景的翻译需求：
+## 8. 主要 API 分区
 
-**第一层：vue-i18n 全局翻译**（适用于页面级文案）
+| 前缀 | 用途 |
+|---|---|
+| `/api/register`、`/api/login`、`/api/me` | 学生认证 |
+| `/api/gateway/*` | 统一教育数据查询 |
+| `/api/chatbot*` | 意图识别、问答与反馈 |
+| `/api/favorites`、`/api/reminders`、`/api/enrollments` | 学生业务 |
+| `/api/courses` | 管理课程与资源 |
+| `/api/admin/*` | 管理认证、账号、报名、政策与审计 |
+| `/api/health`、`/api/ready` | 运行和数据库就绪检查 |
 
-通过 `useI18n()` 的 `t()` 函数访问，支持插值参数与复数形式：
+完整字段契约见 `INTEGRATION_API_CONTRACT.md`，运行说明见 `README.md`。
 
-```typescript
-// 在组件中使用
-const { t } = useI18n()
-const duration = t(`courseDetail.duration_months`, { n: 3 }) // "3个月"
-```
+## 9. 非功能设计
 
-**第二层：Pinia Store 内联翻译字典**（适用于 Navbar 等高频访问组件）
+### 9.1 可用性
 
-`useLangStore` 维护了一个精简的翻译字典，专门服务于导航栏与首页 Hero 区域，避免为少量文案引入完整的 i18n 查找开销：
+- 所有异步操作应显示加载、成功或失败状态。
+- 无权限、未登录、会话过期、空数据和接口异常都有可见反馈。
+- 桌面端与 375px 宽度移动端均需通过核心流程检查。
+- 首页和课程详情的智能助手按钮直接打开聊天窗口。
 
-```typescript
-export const TRANSLATIONS = {
-  zh: { navCourses: '课程探索', navDashboard: '个人中心', ... },
-  ru: { navCourses: 'Курсы', navDashboard: 'Личный кабинет', ... },
-  en: { navCourses: 'Courses', navDashboard: 'Dashboard', ... },
-} as const
-```
+### 9.2 安全与隐私
 
-语言切换时，`setLang()` 方法同步更新 Pinia store 与 vue-i18n 的 `locale`，确保两层翻译系统保持一致：
+- 密码使用哈希存储。
+- 认证接口和问答接口分别限流。
+- 后端对输入长度、类型和枚举范围进行校验。
+- 管理操作保留最小必要的审计信息。
+- 文档中的账号密码只用于本地演示。
 
-```typescript
-function setLang(l: Lang) {
-  lang.value = l
-  i18n.global.locale.value = l  // 同步 vue-i18n
-}
-```
+### 9.3 可复现性
 
-#### 4.3.3 响应式翻译数组的技术难点
+- Docker Compose 固定服务组成和端口。
+- Prisma migration 保存数据库演进。
+- 演示数据不依赖外部系统。
+- 生成式 AI 可关闭，保证核心实验不依赖付费密钥。
 
-在 `HomeView.vue` 中，语种导航列表、统计数据卡片等数组型数据需要在语言切换时实时更新。若将这些数组定义为普通常量，`t()` 函数仅在组件初始化时执行一次，语言切换后数组内容不会更新。
+## 10. 论文实验计划
 
-**解决方案**：将所有包含 `t()` 调用的数组定义为 `computed` 属性，利用 vue-i18n 的响应式 locale 触发重新计算：
+### 10.1 待验证问题
 
-```typescript
-// 错误做法：t() 仅执行一次，语言切换后不更新
-const LANGUAGES = [
-  { name: t('home.langEn'), emoji: '🇬🇧' },
-  // ...
-]
+1. 混合式问答是否比纯关键词方案具有更高的意图识别和任务完成率。
+2. 增加政策检索与上下文后，来源正确率和多轮成功率是否提高。
+3. 统一适配层在接口异常和字段变化时能否提供稳定、可解释的失败结果。
 
-// 正确做法：computed 属性响应 locale 变化
-const LANGUAGES = computed(() => [
-  { name: t('home.langEn'), emoji: '🇬🇧', sub: t('home.langEnSub') },
-  // ...
-])
-```
+### 10.2 对比方案
 
-这一模式在 `HomeView.vue` 的 `STATS`、`QUICK_CARDS`、`LANGUAGES` 三个数组中均有应用，彻底解决了语言切换后静态数组不更新的问题。
+| 方案 | 组成 |
+|---|---|
+| Baseline A | 单一关键词匹配 |
+| Baseline B | 意图识别 + 结构化教育数据 |
+| OpenEdu | 意图识别 + 数据集成 + 政策检索 + 对话上下文 |
 
-### 4.4 HTTP 请求层设计
+### 10.3 指标
 
-`api/http.ts` 创建了一个全局 Axios 实例，统一配置基础 URL 与超时时间，并通过请求拦截器实现管理员令牌的自动注入：
+- Intent Accuracy。
+- Macro Precision、Macro Recall、Macro-F1。
+- 政策检索 Recall@K 与 MRR。
+- 回答事实正确率。
+- 数据来源标注正确率。
+- 多轮任务成功率。
+- 安全拒答率。
+- 平均、P95 响应时间。
+- 学生和管理员关键流程通过率。
 
-```typescript
-export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
-  timeout: 15_000,
-})
+评测数据必须独立于意图规则开发样例，保存固定版本，并支持自动生成结果文件。
 
-http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('ADMIN_TOKEN') || ''
-  if (token) {
-    config.headers['X-Admin-Token'] = token
-  }
-  return config
-})
-```
+## 11. 当前限制与后续顺序
 
-Vite 开发服务器配置了 `/api` 路径的代理转发，将前端请求代理至后端 `http://localhost:3000`，解决开发环境的跨域问题，同时保持生产环境的部署灵活性。
+当前限制：
 
----
+- 尚未连接真实机构 API。
+- 生成式 AI 默认关闭。
+- 问答契约测试规模较小，尚不能作为论文统计结果。
+- 部分学习进度为明确标识的演示操作。
+- 尚需补齐端到端自动化和 API 异常契约测试。
 
+后续实施顺序：
+
+1. 建立独立问答评测集和指标脚本。
+2. 增强外部 API 重试、缓存状态和失败统计。
+3. 补充多身份与业务状态自动化测试。
+4. 清理未使用的旧聊天组件和旧接口文件。
+5. 根据实验结果生成论文表格、流程图和答辩演示脚本。

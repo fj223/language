@@ -1,0 +1,237 @@
+OpenEdu 现有课程对应资源网址清单
+=================================
+
+核对日期：2026-09-06
+核对对象：当前 Docker 运行中的公开课程接口 + 数据库本地管理课程
+
+当前状态
+--------
+1. 源码演示目录共 20 门课程（c001-c020）。
+2. 学生端当前公开显示 19 门。
+3. c002“商务英语精英课”已经复制到本地数据库，但仍为草稿，因此不会在学生端出现。
+4. c001“雅思 7 分冲刺班”已由本地管理并发布，但当前 resources 为空，仍需要补资源。
+
+使用原则
+--------
+- 下列考试机构、文化机构和教学平台页面优先作为 external_link（外部学习页面）。
+- 页面允许“下载练习资料”不等于允许把视频重新上传到本项目；没有明确开放许可证时不要转存。
+- local 类型只使用：本人录制、取得书面授权、Pexels/Pixabay许可素材，或逐条确认许可证的 Wikimedia Commons 文件。
+- YouTube/Bilibili 官方课程使用 youtube/bilibili 类型嵌入，不使用第三方工具下载。
+
+一、英语课程
+------------
+
+c001 雅思 7 分冲刺班（C1，当前已发布、本地管理、资源为空）
+主资源：IELTS 官方备考资源
+网址：https://ielts.org/take-a-test/preparation-resources
+补充：IELTS 官方样题、答案及音频
+网址：https://ielts.org/take-a-test/preparation-resources/sample-test-questions
+后台建议：两项均添加为 external_link；本人录制“写作评分标准/口语模拟”视频作为 local。
+
+c002 商务英语精英课（B2，当前本地草稿，学生端不显示）
+主资源：British Council Business English
+网址：https://learnenglish.britishcouncil.org/free-resources/business
+补充：英语原声样本（逐文件核对许可）
+网址：https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_English
+后台建议：British Council 使用 external_link；Commons 合规文件可下载后作为 local。补资源后再发布该课程。
+
+c003 英语口语纠音强化（B1）
+主资源：British Council 免费音标与发音表 Sounds Right
+网址：https://learnenglish.britishcouncil.org/apps/learnenglish-sounds-right
+补充：Wikimedia Commons 发音演示视频
+网址：https://commons.wikimedia.org/wiki/Category:Videos_showing_pronunciation
+后台建议：主资源使用 external_link；Commons 文件确认 CC/公有领域许可后可作为 local。
+
+c004 英语零基础入门（A1）
+主资源：British Council A1 Elementary
+网址：https://learnenglish.britishcouncil.org/level/understand-your-level/a1-elementary
+补充：British Council Starting Out 初级视频系列入口
+网址：https://learnenglish.britishcouncil.org/free-resources/general/video-series
+后台建议：均使用 external_link；课程内 local 视频建议本人录制“字母—问候—自我介绍”三段。
+
+c005 英语写作进阶 C1（C1）
+主资源：British Council C1 Writing
+网址：https://learnenglish.britishcouncil.org/free-resources/writing/c1
+补充：C1 opinion essay 示例与练习
+网址：https://learnenglish.britishcouncil.org/free-resources/writing/c1/opinion-essay
+后台建议：external_link；本人录制“结构拆解—范文批注—修改前后对比”作为 local。
+
+二、俄语课程
+------------
+
+c006 俄语零基础入门（A1）
+主资源：普希金俄语学院 PushkinOnline A1 课程入口
+网址：https://pushkininstitute.ru/learn
+补充：普希金俄语学院分级测试
+网址：https://pushkininstitute.ru/learn/test
+开放视频候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Videos_in_Russian
+后台建议：学院页面只做 external_link；不要复制其站内课程视频。
+
+c007 ТРКИ 等级考试精讲（B2）
+主资源：PushkinOnline B2/ТРКИ-II 课程说明入口
+网址：https://pushkininstitute.ru/learn
+补充：PushkinOnline B2 模拟分级/认证测试入口
+网址：https://pushkininstitute.ru/learn/test
+后台建议：external_link；本人根据官方考试结构录制模拟讲解，不直接转载官方页面内容。
+
+c008 俄罗斯文学与文化（C1）
+主资源：Культура.РФ“如何阅读俄罗斯经典文学”课程
+网址：https://www.culture.ru/s/kurs-kak-chitat-russkuyu-klassiku/
+补充：Культура.РФ 文学、历史、艺术公开讲座目录
+网址：https://www.culture.ru/lectures
+开放视频候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Videos_in_Russian
+后台建议：Culture.ru 使用 external_link；Commons 合规文件可作为 local 文化听力片段。
+
+三、法语课程
+------------
+
+c009 浪漫法语入门 A1（A1）
+主资源：TV5MONDE Première classe—问候、自我介绍与发音
+网址：https://apprendre.tv5monde.com/fr/exercices/premiere-classe/les-salutations
+补充：TV5MONDE A1 免费视频练习集合
+网址：https://apprendre.tv5monde.com/en/exercices/a1-breakthrough
+法语原声候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_French
+后台建议：TV5MONDE 使用 external_link；Commons 合规文件可作为 local。
+
+c010 TEF 法语等级备考（B2）
+主资源：CCI Paris Île-de-France 官方 TEF Études 备考
+网址：https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-etudes/preparation/
+补充：TEF 考试组成和版本说明
+网址：https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/
+后台建议：external_link；官方样题用于学习，不默认复制进项目。
+
+c011 法语商务沟通 B1（B1）
+主资源：CCI Paris Île-de-France DFP Affaires B1 备考资料包
+网址：https://www.lefrancaisdesaffaires.fr/professeur/preparation-dfp/affaires/b1/
+补充：TV5MONDE 免费练习集合中的 Diplôme de français des affaires
+网址：https://apprendre.tv5monde.com/en/collection-all
+后台建议：external_link；本人制作“邮件—电话—会议—产品介绍”四段 local 视频。
+
+四、日语课程
+------------
+
+c012 日语 N5 零基础入门（A1）
+主资源：日本国际交流基金 IRODORI Starter（教材与配套音频）
+网址：https://www.irodori.jpf.go.jp/en/
+补充：JLPT 官方 N5-N1 样题入口
+网址：https://www.jlpt.jp/e/samples/forlearners.html
+教学演示：Marugoto A1-B1 教材与下载资料入口
+网址：https://marugoto.jpf.go.jp/en/
+后台建议：均作为 external_link；下载资料只用于学习，不默认重新发布。
+
+c013 日语 N3 强化冲刺（B1）
+主资源：JLPT 官方 N3 样题、听力音频、脚本和答案
+网址：https://www.jlpt.jp/e/samples/sample09.html
+补充：JLPT 官方分级样题入口
+网址：https://www.jlpt.jp/e/samples/forlearners.html
+后台建议：external_link；JLPT 页面明确提示部分内容含第三方版权，不作为 local 重新上传。
+
+c014 日语 N1 精英班（C1）
+主资源：JLPT 官方 N1 样题、听力音频、脚本和答案
+网址：https://www.jlpt.jp/e/samples/sample09.html
+补充：JLPT N1-N5 考试题型与时间结构
+网址：https://www.jlpt.jp/e/guideline/testsections.html
+后台建议：external_link；本人录制“长文阅读—同义替换—听力概要理解”讲解视频。
+
+五、德语课程
+------------
+
+c015 德语 A1 入门基础（A1）
+主资源：Goethe-Institut 免费德语练习（A1-C2）
+网址：https://www.goethe.de/en/spr/ueb.html
+补充：Mein Weg nach Deutschland A1 视频与练习
+网址：https://www.goethe.de/prj/mwd/en/deu.html
+德语原声候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_German
+后台建议：Goethe 页面使用 external_link；Commons 合规文件可作为 local。
+
+c016 德语 B2 考级冲刺（B2）
+主资源：Goethe-Zertifikat B2 官方考试训练
+网址：https://www.goethe.de/en/m/spr/prf/ueb/pb2.html
+补充：Goethe A1-C2 全部官方考试训练
+网址：https://www.goethe.de/de/m/spr/prf/ueb.html
+后台建议：external_link。页面虽提供 PDF/音频下载，不代表允许在本项目重新分发。
+
+六、西班牙语课程
+----------------
+
+c017 西班牙语 A2 日常会话（A2）
+主资源：Instituto Cervantes AVE 免费互动活动
+网址：https://cvc.cervantes.es/ensenanza/actividades_ave/
+补充：Aveteca A1-A2、B1-B2、C1 分级活动目录
+网址：https://cvc.cervantes.es/ensenanza/actividades_ave/aveteca.htm
+西语原声候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_Spanish
+后台建议：Cervantes 使用 external_link；Commons 合规文件可作为 local 会话听力。
+
+c018 西班牙语 DELE B1 备考（B1）
+主资源：Instituto Cervantes 官方 DELE 备考页面
+网址：https://examenes.cervantes.es/es/dele/preparar-prueba
+补充：DELE B1 考试结构与相关文件下载
+网址：https://examenes.cervantes.es/es/dele/examenes/b1
+后台建议：external_link；官方页面包含 B1 试卷、音频、文本和答案，但应遵守网站版权规则。
+
+七、韩语课程
+------------
+
+c019 韩语 TOPIK I 入门（A2）
+主资源：Online King Sejong Institute—入门与初级课程
+网址：https://www.iksi.or.kr/lms/main/curriculum.do
+补充：韩国教育部国立国际教育院 TOPIK 官方网站
+网址：https://www.topik.go.kr/
+韩语原声候选（逐文件核对许可）：
+网址：https://commons.wikimedia.org/wiki/Category:Wikitongues_videos_in_Korean
+后台建议：世宗学堂与 TOPIK 使用 external_link；站内 VOD 不下载。
+
+c020 韩语 TOPIK II 进阶（B2）
+主资源：Online King Sejong Institute—中级、进阶及阅读写作课程
+网址：https://www.iksi.or.kr/lms/main/curriculum.do
+补充：TOPIK 官方网站
+网址：https://www.topik.go.kr/
+补充工具：韩国国立国语院官方词典与学习资源
+网址：https://www.korean.go.kr/front_eng/main.do
+后台建议：external_link；本人录制“阅读题型—连接表达—写作结构”作为 local。
+
+八、可下载并放入 local 的统一素材入口
+------------------------------------
+
+以下入口适用于所有课程，但只能作为片头、课堂场景、文化背景或真实语音样本，不能冒充完整课程讲解：
+
+Pexels 语言学习视频：
+https://www.pexels.com/search/videos/language%20learning/
+授权：https://www.pexels.com/license/
+
+Pixabay 语言学习视频：
+https://pixabay.com/videos/search/language%20learning/
+授权：https://pixabay.com/service/license-summary/
+
+Wikimedia Commons 多语种视频：
+https://commons.wikimedia.org/wiki/Category:Videos_by_language
+复用规则：https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia/en
+
+推荐下载顺序
+------------
+第一批（答辩闭环）：c001、c004、c006、c009、c012、c015、c017、c019，各补 1 个本人讲解视频。
+第二批（考试功能）：c007、c010、c013、c014、c016、c018、c020，各添加官方 external_link。
+第三批（能力展示）：c003、c005、c008、c011，补充 2-3 个章节化 local 视频。
+最后处理 c002：先添加商务英语资源，再将草稿发布；否则学生端会继续只有 19 门。
+
+后台填写示例
+------------
+官方学习页：
+  resource_type = external_link
+  source_url = 上述完整 https:// 地址
+
+Wikimedia 开放文件：
+  先进入 File 页面核对许可证并下载
+  存放到 frontend/public/videos/对应语种/
+  resource_type = local
+  source_url = /videos/对应语种/文件名.mp4 或 .webm
+
+本人录制视频：
+  resource_type = local
+  source_url = /videos/en/a1-greetings-01.mp4（示例）
+

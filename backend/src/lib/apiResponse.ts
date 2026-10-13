@@ -16,7 +16,13 @@ export function sendOk<T>(res: Response, data: T, status = 200) {
 }
 
 export function sendError(res: Response, error: string, status = 500) {
-  const payload: ErrorResponse = { ok: false, error }
+  if (status >= 500) {
+    console.error(`[api:error] status=${status} message=${error}`)
+  }
+  const safeError = status >= 500 && process.env.NODE_ENV === 'production'
+    ? 'Internal server error'
+    : error
+  const payload: ErrorResponse = { ok: false, error: safeError }
   res.status(status).json(payload)
 }
 

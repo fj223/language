@@ -14,16 +14,45 @@ enum VideoResourceType {
   external_link
 }
 
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  POLICY_EDITOR
+  ANALYST
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AssignmentSubmissionStatus {
+  SUBMITTED
+  GRADED
+}
+
 model Course {
-  id          String          @id @default(cuid()) @db.VarChar(191)
-  title       String          @db.VarChar(200)
-  coverUrl    String?         @db.VarChar(2048)
-  description String?         @db.Text
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id           String    @id @default(cuid()) @db.VarChar(191)
+  title        String    @db.VarChar(200)
+  language     String    @default("英语") @db.VarChar(50)
+  level        String?   @db.VarChar(20)
+  schedule     String?   @db.VarChar(200)
+  teacher      String?   @db.VarChar(100)
+  coverUrl     String?   @db.VarChar(2048)
+  description  String?   @db.Text
+  translations Json?
+  isPublished  Boolean   @default(true)
+  isArchived   Boolean   @default(false)
+  archivedAt   DateTime?
+  archivedBy   String?   @db.VarChar(191)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   videoResources VideoResource[]
-  studyRecords   StudyRecord[]
+
+  @@index([isArchived, isPublished])
 }
 
 model VideoResource {
@@ -32,6 +61,7 @@ model VideoResource {
   resourceType VideoResourceType @map("resource_type")
   sourceUrl    String            @map("source_url") @db.Text
   title        String?           @db.VarChar(200)
+  translations Json?
   sortOrder    Int               @default(0)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -67,8 +97,6 @@ model StudyRecord {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
   @@unique([userId, courseId])
   @@index([courseId])
 }
@@ -81,5 +109,272 @@ model Student {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  flashcards Flashcard[]
+  flashcards            Flashcard[]
+  favorites             CourseFavorite[]
+  reminders             LearningReminder[]
+  enrollments           EnrollmentApplication[]
+  lessonProgress        LessonProgress[]
+  assignmentSubmissions AssignmentSubmission[]
+  quizAttempts          QuizAttempt[]
+}
+
+model CourseChapter {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  courseId    String   @db.VarChar(191)
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     CourseLesson[]
+  assignments Assignment[]
+  quizzes     Quiz[]
+
+  @@index([courseId, sortOrder])
+}
+
+model CourseLesson {
+  id              String   @id @default(cuid()) @db.VarChar(191)
+  chapterId       String   @db.VarChar(191)
+  title           String   @db.VarChar(200)
+  summary         String?  @db.Text
+  contentUrl      String?  @db.Text
+  durationMinutes Int      @default(15)
+  sortOrder       Int      @default(0)
+  isPublished     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  chapter  CourseChapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@index([chapterId, sortOrder])
+}
+
+model LessonProgress {
+  id              String    @id @default(cuid()) @db.VarChar(191)
+  studentId       String    @db.VarChar(191)
+  lessonId        String    @db.VarChar(191)
+  positionSeconds Int       @default(0)
+  isCompleted     Boolean   @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  CourseLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, lessonId])
+  @@index([lessonId])
+}
+
+model Assignment {
+  id           String    @id @default(cuid()) @db.VarChar(191)
+  chapterId    String    @db.VarChar(191)
+  title        String    @db.VarChar(200)
+  instructions String    @db.Text
+  maxScore     Int       @default(100)
+  dueAt        DateTime?
+  sortOrder    Int       @default(0)
+  isPublished  Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  chapter     CourseChapter          @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
+
+  @@index([chapterId, sortOrder])
+}
+
+model AssignmentSubmission {
+  id           String                     @id @default(cuid()) @db.VarChar(191)
+  assignmentId String                     @db.VarChar(191)
+  studentId    String                     @db.VarChar(191)
+  content      String                     @db.Text
+  status       AssignmentSubmissionStatus @default(SUBMITTED)
+  score        Int?
+  feedback     String?                    @db.Text
+  gradedBy     String?                    @db.VarChar(191)
+  submittedAt  DateTime                   @default(now())
+  gradedAt     DateTime?
+  updatedAt    DateTime                   @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId, submittedAt])
+}
+
+model Quiz {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  chapterId   String   @db.VarChar(191)
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  passScore   Int      @default(60)
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chapter   CourseChapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([chapterId, sortOrder])
+}
+
+model QuizQuestion {
+  id            String  @id @default(cuid()) @db.VarChar(191)
+  quizId        String  @db.VarChar(191)
+  prompt        String  @db.Text
+  options       Json
+  correctOption Int
+  explanation   String? @db.Text
+  sortOrder     Int     @default(0)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, sortOrder])
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  quizId      String   @db.VarChar(191)
+  studentId   String   @db.VarChar(191)
+  answers     Json
+  score       Int
+  passed      Boolean
+  submittedAt DateTime @default(now())
+
+  quiz    Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, studentId, submittedAt])
+  @@index([studentId, submittedAt])
+}
+
+model ChatFeedback {
+  id         String   @id @default(cuid()) @db.VarChar(191)
+  responseId String   @unique @db.VarChar(64)
+  intent     String   @db.VarChar(40)
+  rating     String   @db.VarChar(20)
+  reason     String?  @db.VarChar(200)
+  studentId  String?  @db.VarChar(191)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([intent, rating])
+  @@index([createdAt])
+  @@index([studentId])
+}
+
+model AdminUser {
+  id           String    @id @default(cuid()) @db.VarChar(191)
+  email        String    @unique @db.VarChar(255)
+  name         String    @db.VarChar(100)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         AdminRole @default(CONTENT_MANAGER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs AdminAuditLog[]
+}
+
+model AdminAuditLog {
+  id         String    @id @default(cuid()) @db.VarChar(191)
+  actorId    String?   @db.VarChar(191)
+  actorEmail String    @db.VarChar(255)
+  actorName  String    @db.VarChar(100)
+  actorRole  AdminRole
+  action     String    @db.VarChar(80)
+  targetType String    @db.VarChar(80)
+  targetId   String?   @db.VarChar(191)
+  summary    String    @db.VarChar(500)
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+
+  actor AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+}
+
+model SchoolPolicy {
+  id          String   @id @db.VarChar(64)
+  title       String   @db.VarChar(200)
+  keywords    Json
+  summary     String   @db.Text
+  guidance    String   @db.Text
+  owner       String   @db.VarChar(100)
+  isPublished Boolean  @default(true)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, updatedAt])
+}
+
+model CourseFavorite {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  studentId String   @db.VarChar(191)
+  courseId  String   @db.VarChar(191)
+  title     String   @db.VarChar(200)
+  language  String   @db.VarChar(50)
+  level     String?  @db.VarChar(20)
+  teacher   String?  @db.VarChar(100)
+  schedule  String?  @db.VarChar(200)
+  coverUrl  String?  @db.VarChar(2048)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([studentId, createdAt])
+}
+
+model LearningReminder {
+  id          String    @id @default(cuid()) @db.VarChar(191)
+  studentId   String    @db.VarChar(191)
+  title       String    @db.VarChar(160)
+  note        String?   @db.VarChar(500)
+  courseId    String?   @db.VarChar(191)
+  remindAt    DateTime
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, remindAt])
+  @@index([studentId, completedAt])
+}
+
+model EnrollmentApplication {
+  id          String           @id @default(cuid()) @db.VarChar(191)
+  studentId   String           @db.VarChar(191)
+  courseId    String           @db.VarChar(191)
+  courseTitle String           @db.VarChar(200)
+  language    String           @db.VarChar(50)
+  level       String?          @db.VarChar(20)
+  teacher     String?          @db.VarChar(100)
+  schedule    String?          @db.VarChar(200)
+  status      EnrollmentStatus @default(PENDING)
+  studentNote String?          @db.VarChar(500)
+  adminNote   String?          @db.VarChar(500)
+  reviewedBy  String?          @db.VarChar(191)
+  reviewedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([status, createdAt])
+  @@index([studentId, updatedAt])
 }

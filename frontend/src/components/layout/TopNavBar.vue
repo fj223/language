@@ -1,27 +1,27 @@
 <template>
-  <nav
+  <header
     class="fixed top-0 w-full z-50 h-16"
     :class="scrolled ? 'navbar-scrolled' : 'navbar-top'"
   >
-    <div class="h-full flex items-center justify-between px-8 max-w-7xl mx-auto">
+    <div class="h-full flex items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
 
       <!-- ===== 品牌 Logo ===== -->
       <a
         href="/"
         class="flex items-center gap-2.5 flex-none group"
-        @click.prevent="() => { window.location.href = '/' }"
+        @click.prevent="navigateHome"
       >
         <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
           <span class="material-symbols-outlined text-white text-base" aria-hidden="true">school</span>
         </div>
         <div class="leading-none">
           <span class="text-lg font-extrabold tracking-tight text-primary font-headline">{{ $t('navbar.brand') }}</span>
-          <span class="text-xs font-medium text-on-surface-variant ml-1.5 font-body opacity-80">{{ $t('navbar.brandSub') }}</span>
+          <span class="ml-1.5 hidden text-xs font-medium text-on-surface-variant opacity-80 min-[480px]:inline font-body">{{ $t('navbar.brandSub') }}</span>
         </div>
       </a>
 
       <!-- ===== 主导航链接 ===== -->
-      <nav class="hidden lg:flex items-center gap-1" aria-label="主导航">
+      <nav class="hidden lg:flex items-center gap-1" :aria-label="$t('navbar.mainNav')">
         <router-link
           to="/courses"
           class="nav-link"
@@ -51,70 +51,26 @@
       <!-- ===== 右侧操作区 ===== -->
       <div class="flex items-center gap-2 flex-none">
 
-        <!-- 语言切换器 -->
-        <div class="relative" ref="langDropdownRef">
-          <button
-            type="button"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-surface-container transition-colors duration-200 text-on-surface-variant"
-            :aria-expanded="langDropdownOpen"
-            aria-haspopup="true"
-            @click="langDropdownOpen = !langDropdownOpen"
-            title="切换语言 / Switch Language"
-          >
-            <span class="material-symbols-outlined text-base" aria-hidden="true">language</span>
-            <span class="text-xs font-bold tracking-wide uppercase">{{ langStore.lang }}</span>
-            <span
-              class="material-symbols-outlined text-sm transition-transform duration-200"
-              :class="langDropdownOpen ? 'rotate-180' : ''"
-              aria-hidden="true"
-            >expand_more</span>
-          </button>
-
-          <Transition name="dropdown">
-            <div
-              v-if="langDropdownOpen"
-              class="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl border border-outline-variant/20 overflow-hidden py-1.5"
-              role="menu"
-            >
-              <button
-                v-for="opt in LANG_OPTIONS"
-                :key="opt.code"
-                type="button"
-                class="lang-option w-full"
-                :class="{ 'lang-option-active': langStore.lang === opt.code }"
-                role="menuitem"
-                @click="selectLang(opt.code)"
-              >
-                <span class="text-base" aria-hidden="true">{{ opt.flag }}</span>
-                <span class="flex-1 text-left text-sm">{{ opt.label }}</span>
-                <span
-                  v-if="langStore.lang === opt.code"
-                  class="material-symbols-outlined text-sm text-primary"
-                  aria-hidden="true"
-                >check</span>
-              </button>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- 管理员入口 -->
-        <router-link
-          to="/admin"
-          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors text-xs font-bold tracking-wide"
-          title="管理员后台"
+        <button
+          type="button"
+          class="lg:hidden grid h-10 w-10 place-items-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          :aria-expanded="mobileMenuOpen"
+          :aria-label="mobileMenuOpen ? $t('navbar.closeMenu') : $t('navbar.openMenu')"
+          @click="mobileMenuOpen = !mobileMenuOpen"
         >
-          <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
-          Admin
-        </router-link>
+          <span class="material-symbols-outlined">{{ mobileMenuOpen ? 'close' : 'menu' }}</span>
+        </button>
+
+        <LanguageSwitcher />
 
         <!-- 未登录：显示登录按钮 -->
         <router-link
           v-if="!isLoggedIn"
           to="/auth"
-          class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border-2 border-primary text-primary text-sm font-bold hover:bg-primary hover:text-white transition-all duration-200"
+          class="flex h-10 w-10 items-center justify-center gap-1.5 rounded-lg border-2 border-primary p-0 text-sm font-bold text-primary transition-all duration-200 hover:bg-primary hover:text-white sm:w-auto sm:px-4 sm:py-1.5"
         >
           <span class="material-symbols-outlined text-base">login</span>
-          {{ $t('navbar.login') }}
+          <span class="hidden sm:inline">{{ $t('navbar.login') }}</span>
         </router-link>
 
         <!-- 已登录：用户头像下拉菜单 -->
@@ -134,7 +90,7 @@
               class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-sm shadow-sm group-hover:shadow-md transition-shadow"
               aria-hidden="true"
             >
-              {{ studentName?.charAt(0) ?? '学' }}
+              {{ studentName?.charAt(0) ?? $t('navbar.avatarFallback') }}
             </div>
             <span
               class="material-symbols-outlined text-on-surface-variant text-base transition-transform duration-200"
@@ -154,7 +110,7 @@
               <div class="px-4 py-3 border-b border-outline-variant/10">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold">
-                    {{ studentName?.charAt(0) ?? '学' }}
+                    {{ studentName?.charAt(0) ?? $t('navbar.avatarFallback') }}
                   </div>
                   <div>
                     <p class="text-sm font-bold text-on-surface">{{ studentName }}</p>
@@ -173,11 +129,6 @@
                 <span class="material-symbols-outlined text-base" aria-hidden="true">dashboard</span>
                 {{ $t('navbar.dashboard') }}
               </router-link>
-              <a class="dropdown-item" href="#" role="menuitem">
-                <span class="material-symbols-outlined text-base" aria-hidden="true">settings</span>
-                {{ $t('navbar.accountSettings') }}
-              </a>
-
               <div class="border-t border-outline-variant/10 mt-1 pt-1">
                 <button
                   type="button"
@@ -195,34 +146,55 @@
 
       </div>
     </div>
-  </nav>
+
+    <Transition name="mobile-menu">
+      <div
+        v-if="mobileMenuOpen"
+        class="lg:hidden absolute left-3 right-3 top-[4.5rem] rounded-2xl border border-outline-variant/20 bg-white/95 p-3 shadow-2xl backdrop-blur-xl"
+      >
+        <div class="grid gap-1">
+          <router-link to="/courses" class="mobile-nav-link">
+            <span class="material-symbols-outlined">menu_book</span>
+            {{ $t('navbar.courses') }}
+          </router-link>
+          <router-link to="/dashboard" class="mobile-nav-link">
+            <span class="material-symbols-outlined">dashboard</span>
+            {{ $t('navbar.dashboard') }}
+          </router-link>
+          <router-link to="/review-hall" class="mobile-nav-link">
+            <span class="material-symbols-outlined">style</span>
+            {{ $t('navbar.reviewHall') }}
+          </router-link>
+        </div>
+      </div>
+    </Transition>
+  </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudentAuth } from '@/composables/useStudentAuth'
-import { useLangStore, type Lang } from '@/stores/useLangStore'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 
 const router = useRouter()
 const { isLoggedIn, studentName, logout } = useStudentAuth()
-const langStore = useLangStore()
-
-const LANG_OPTIONS: { code: Lang; label: string; flag: string }[] = [
-  { code: 'zh', label: '简体中文', flag: '🇨🇳' },
-  { code: 'ru', label: 'Русский',  flag: '🇷🇺' },
-  { code: 'en', label: 'English',  flag: '🇬🇧' },
-]
 
 const scrolled = ref(false)
 const dropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
-const langDropdownOpen = ref(false)
-const langDropdownRef = ref<HTMLElement | null>(null)
+const mobileMenuOpen = ref(false)
 
-function selectLang(code: Lang) {
-  langStore.setLang(code)
-  langDropdownOpen.value = false
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+    dropdownOpen.value = false
+  },
+)
+
+function navigateHome() {
+  router.push('/')
 }
 
 // 滚动监听：导航栏背景随滚动变化
@@ -234,9 +206,6 @@ function onScroll() {
 function onClickOutside(e: MouseEvent) {
   if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
     dropdownOpen.value = false
-  }
-  if (langDropdownRef.value && !langDropdownRef.value.contains(e.target as Node)) {
-    langDropdownOpen.value = false
   }
 }
 
@@ -355,25 +324,33 @@ onUnmounted(() => {
   transform: scale(0.92) translateY(-6px);
 }
 
-/* 语言选项 */
-.lang-option {
+.mobile-nav-link {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border: none;
-  background: none;
-  transition: background 0.15s ease;
+  gap: 0.75rem;
+  border-radius: 0.85rem;
+  padding: 0.8rem 1rem;
   color: var(--color-on-surface);
-}
-
-.lang-option:hover {
-  background: var(--color-surface-container-low);
-}
-
-.lang-option-active {
-  background: var(--color-primary-container);
+  font-size: 0.9rem;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.router-link-active {
+  background: var(--color-primary-container);
+  color: var(--color-primary);
+}
+
+.mobile-menu-enter-active,
+.mobile-menu-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+  transform-origin: top;
+}
+
+.mobile-menu-enter-from,
+.mobile-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
 }
 </style>

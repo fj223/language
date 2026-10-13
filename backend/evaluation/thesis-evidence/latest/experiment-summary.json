@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "environment": {
+    "generatedAt": "2026-07-29T12:14:14.481Z",
+    "runId": "2026-07-29T12-14-14-481Z",
+    "nodeVersion": "v20.14.0",
+    "platform": "win32-x64",
+    "gitCommit": "5faf64e80ebff811b3d0b9f3f7d22d0fc0486e3b",
+    "workingTreeDirty": true,
+    "aiGenerationKeyRequired": false,
+    "datasetRole": "versioned engineering regression benchmark"
+  },
+  "dataset": {
+    "version": "1.0.0",
+    "description": "OpenEdu versioned regression benchmark for intent and context behavior. A separately collected human-labelled holdout set is still required for final thesis reporting.",
+    "directCases": 196,
+    "contextualCases": 14,
+    "totalCases": 210,
+    "languages": [
+      "zh-CN",
+      "en",
+      "ru"
+    ]
+  },
+  "researchClaims": {
+    "intentRecognition": {
+      "baselineAccuracy": 0.2041,
+      "enhancedAccuracy": 1,
+      "enhancedMacroF1": 1
+    },
+    "contextResolution": {
+      "cases": 14,
+      "accuracy": 1
+    },
+    "workflowValidation": {
+      "passed": 6,
+      "total": 6,
+      "passRate": 1
+    }
+  },
+  "limitations": [
+    "The current intent dataset participated in engineering iteration and is not an independent thesis holdout set.",
+    "A separately collected, frozen, human-labelled holdout set is still required for final generalisation claims.",
+    "Generative AI is intentionally disabled; the evaluated core is the explainable hybrid intent, retrieval, context, and workflow system."
+  ]
+}
